@@ -1,5 +1,3 @@
-"""Extracción del parte por reglas: frases del operador y errores reales de la transcripción."""
-
 from sistema.procesamiento.parte import armar_borrador, preparar_texto
 from sistema.procesamiento.reglas_parte import extraer, extraer_con_cobertura
 
@@ -18,7 +16,7 @@ def test_nota_mezclada(planta):
 
 
 def test_nombre_mal_transcripto(planta):
-    """Corrida del corrector: "La uno está en…" salió "A uno estar en…"."""
+    """Dictado "La uno está en…", transcripto "A uno estar en…"."""
     assert filas("A uno estar en ciento doce kilogramos de descarga el rodamiento, me dio 59 grados con la pistola.",
                  planta) == [("B-101", "presion_descarga_local", 112, "kg/cm2"),
                              ("B-101", "temperatura_rodamiento_ir", 59, "degC")]
@@ -41,7 +39,6 @@ def test_foto_en_la_fila_que_corresponde(planta):
 
 
 def test_cada_lectura_toma_el_ultimo_equipo_nombrado_antes(planta):
-    """Transcripción real: dos lecturas en la misma cláusula, unidas por "y"."""
     assert filas("La de la punta está en ciento quince kilos de descarga. El pulmón está en cinco metros y el filtro A "
                  "me dio uno con cuatro de diferencial.", planta) == [
         ("B-101", "presion_descarga_local", 115, "kg/cm2"), ("TK-301", "nivel", 5, "m"),
@@ -54,7 +51,7 @@ def test_numero_mitad_en_palabras_mitad_en_digitos(planta):
 
 
 def test_bomba_sin_articulo_y_unidad_de_otro_manometro_quedan_ambiguas(planta):
-    """Corrida del corrector: "También la bomba está en 1600 psi" salió "Ambienta bomba está en…"."""
+    """Dictado "También la bomba está en…", transcripto "Ambienta bomba está en…"."""
     dictado = extraer(preparar_texto("La uno está en ciento doce kilogramos de descarga. El rodamiento me dio 59 grados "
                                      "con la pistola. Ambienta bomba está en mil seiscientos psi de descarga. El filtro "
                                      "A me dio uno coma tres de diferencial."), planta)

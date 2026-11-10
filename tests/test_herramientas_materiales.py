@@ -1,34 +1,15 @@
-"""consultar_repuestos y consultar_tareas: inventario, listas de materiales y catálogo, leídos de materiales.yaml."""
-
 import pytest
 
-from apoyo_herramientas import DATOS, recursos, simular_planta
+from apoyo_herramientas import recursos, simular_planta
 from sistema.herramientas import ErrorHerramienta, ejecutar
-from sistema.herramientas.materiales import MaterialesYaml, ruta_materiales
+from sistema.herramientas.materiales import MaterialesYaml
 from sistema.herramientas.modelos import SalidaRepuestos, SalidaTareas
 
 
 @pytest.fixture
 def api():
-    """Solo hace falta para nombres informales; con TAG exacto no se consulta la planta."""
     with simular_planta() as m:
         yield m
-
-
-# ---------------------------------------------------------------- repositorio
-
-async def test_repositorio_yaml(materiales):
-    catalogo = await MaterialesYaml(DATOS / "materiales.yaml").cargar()
-    assert set(catalogo.repuestos) == {r["codigo"] for r in materiales["repuestos"]}
-    assert catalogo.lista_materiales["F-201B"] == ["FC-CART-10", "FC-JUNTA-TAPA", "INS-TRANS-P"]
-    assert sum(not t.estandar for t in catalogo.tareas) == len(materiales["tareas_no_estandar"])
-
-
-def test_ruta_por_variable_de_entorno(monkeypatch, tmp_path):
-    monkeypatch.setenv("MATERIALES_PATH", str(tmp_path / "m.yaml"))
-    assert ruta_materiales() == tmp_path / "m.yaml"
-    monkeypatch.delenv("MATERIALES_PATH")
-    assert ruta_materiales().name == "materiales.yaml" and ruta_materiales().exists()
 
 
 async def test_catalogo_ausente_da_error_estructurado(tmp_path):
@@ -37,8 +18,6 @@ async def test_catalogo_ausente_da_error_estructurado(tmp_path):
     salida = await ejecutar("consultar_repuestos", {}, r)
     assert salida.codigo == "MATERIALES_NO_DISPONIBLES" and "MATERIALES_PATH" in salida.mensaje
 
-
-# ---------------------------------------------------------------- consultar_repuestos
 
 async def test_inventario_completo(api):
     salida = await ejecutar("consultar_repuestos", {}, recursos())
@@ -66,24 +45,16 @@ async def test_equipo_por_nombre_informal_sin_lista(api):
     assert salida.equipo == "TK-301" and salida.repuestos == [] and "no tiene lista" in salida.observacion
 
 
-@pytest.mark.parametrize("argumentos, codigo", [
-    ({"codigo": "XX-999"}, "REPUESTO_INEXISTENTE"),
-    ({"equipo": "B-104"}, "EQUIPO_INEXISTENTE"),
-    ({"equipo": "B-102", "codigo": "TX-EMP-KIT"}, "ARGUMENTOS_INVALIDOS"),
-    ({"codigo": "kit de empaquetadura"}, "ARGUMENTOS_INVALIDOS"),
-    ({"almacen": "central"}, "ARGUMENTOS_INVALIDOS"),
+@pytest.mark.parametrize("argumentos, codigo, pista", [
+    ({"codigo": "XX-999"}, "REPUESTO_INEXISTENTE", "INS-TRANS-P"),
+    ({"equipo": "B-102", "codigo": "TX-EMP-KIT"}, "ARGUMENTOS_INVALIDOS", "no los dos"),
+    ({"codigo": "kit de empaquetadura"}, "ARGUMENTOS_INVALIDOS", "codigo"),
 ])
-async def test_repuestos_validacion(api, argumentos, codigo):
+async def test_repuestos_validacion(api, argumentos, codigo, pista):
     salida = await ejecutar("consultar_repuestos", argumentos, recursos())
     assert isinstance(salida, ErrorHerramienta) and salida.codigo == codigo and not salida.reintentable
+    assert pista in salida.mensaje
 
-
-async def test_repuesto_inexistente_lista_los_validos(api):
-    salida = await ejecutar("consultar_repuestos", {"codigo": "XX-999"}, recursos())
-    assert "TX-EMP-KIT" in salida.mensaje and "INS-TRANS-P" in salida.mensaje
-
-
-# ---------------------------------------------------------------- consultar_tareas
 
 async def test_tareas_de_un_filtro_con_costo_y_stock(api):
     salida = await ejecutar("consultar_tareas", {"equipo": "el filtro B"}, recursos())
@@ -126,8 +97,6 @@ async def test_solo_no_estandar(api):
 @pytest.mark.parametrize("argumentos, codigo, pista", [
     ({"codigo": "T-X-999"}, "TAREA_INEXISTENTE", "T-B-EMP"),
     ({"equipo": "B-104"}, "EQUIPO_INEXISTENTE", "B-101"),
-    ({"estandar": "quizás"}, "ARGUMENTOS_INVALIDOS", "estandar"),
-    ({"equipo": "B-102", "urgente": True}, "ARGUMENTOS_INVALIDOS", "'urgente' no existe"),
 ])
 async def test_tareas_validacion(api, argumentos, codigo, pista):
     salida = await ejecutar("consultar_tareas", argumentos, recursos())

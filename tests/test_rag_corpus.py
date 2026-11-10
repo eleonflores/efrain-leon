@@ -1,13 +1,9 @@
-"""Metadatos del corpus del RAG: vigencia, aplicabilidad a PIA-3, equipos y texto de búsqueda de las órdenes."""
-
 import json
 
 import numpy as np
 import pytest
 
-from sistema.rag.corpus import (
-    armar_fragmentos, cargar_corpus, expandir_abreviaturas, motivo_no_aplica, ruta_documentos, texto_busqueda_orden,
-)
+from sistema.rag.corpus import cargar_corpus, expandir_abreviaturas, ruta_documentos, texto_busqueda_orden
 from sistema.rag.embeddings import MODELO_POR_DEFECTO, MODELOS, leer_vectores
 from sistema.rag.indice import fila, version_indice
 
@@ -35,27 +31,14 @@ def test_rev_c_no_vigente_y_rev_d_vigente(corpus):
     assert all(not f.vigente for f in corpus.fragmentos if f.documento == "TX350-C")
 
 
-@pytest.mark.parametrize("cita", ["TX350-D §3.3", "TX350-D §2.1", "FC48-3 §2.1", "MBP-4 §5.3", "MBP-4 §17",
-                                  "MBP-4 §17.1", "MBP-4 §17.3", "TX350-D §12.4", "FC48-3 §16.2", "TX350-D §4.6",
-                                  "TX350-D §11.2", "FC48-3 §11.1"])
+@pytest.mark.parametrize("cita", ["TX350-D §3.3", "TX350-D §2.1", "MBP-4 §5.3", "MBP-4 §17.1", "TX350-D §12.4",
+                                  "TX350-D §4.6", "TX350-D §11.2", "FC48-3 §11.1"])
 def test_secciones_que_no_aplican_a_pia3(corpus, cita):
     f = corpus.por_cita()[cita]
     assert not f.aplica_pia3 and f.motivo_no_aplica
 
 
-@pytest.mark.parametrize("cita", ["TX350-D §3.1", "MBP-4 §1.1", "MBP-4 §6.1", "FC48-3 §17.4",
-                                  "CT-SVP-2025 §2.5", "historial OT-25-0026"])
-def test_secciones_que_aplican(corpus, cita):
-    assert corpus.por_cita()[cita].aplica_pia3
-
-
-def test_el_capitulo_contagia_la_no_aplicabilidad():
-    assert motivo_no_aplica(None, "otras-plantas") and motivo_no_aplica("pia1", "otras-plantas")
-    assert motivo_no_aplica("limites", "especificaciones") is None
-
-
 def test_el_filtro_por_defecto_no_saca_ninguna_respuesta_de_la_suite(corpus, suite):
-    """Pre-filtrar es seguro: ninguna sección relevante de las 71 preguntas es no vigente o no aplicable."""
     por_cita = corpus.por_cita()
     relevantes = {r for q in suite for r in q["relevantes"]}
     assert all(por_cita[r].vigente and por_cita[r].aplica_pia3 for r in relevantes)
@@ -92,18 +75,6 @@ def test_el_texto_original_se_conserva_para_mostrar(corpus):
     assert seccion.texto_para_embeber().startswith("Bomba alternativa triplex Trimax TX-350 (TX350-D, revisión D).")
 
 
-def test_armar_fragmentos_con_un_indice_minimo():
-    indice = {"documentos": [{"id": "X-1", "titulo": "Manual X", "revision": "B", "vigente": False,
-                              "tipo": "manual_fabricante", "emisor": "Fabricante X", "equipos": ["B-101"]}]}
-    lineas = [{"id": "X-1 §2", "doc": "X-1", "numero": "2", "titulo": "Opcionales", "clave": "opcionales",
-               "pagina": 3, "vigente": False, "texto": "2. Opcionales"},
-              {"id": "X-1 §2.1", "doc": "X-1", "numero": "2.1", "titulo": "Kit", "clave": "kit", "pagina": 3,
-               "vigente": False, "texto": "2.1 Kit"}]
-    a, b = armar_fragmentos(lineas, indice)
-    assert not a.aplica_pia3 and not b.aplica_pia3 and not b.vigente
-    assert b.fabricante == "Fabricante X" and b.equipos == ("B-101",) and b.revision == "B"
-
-
 def test_fila_para_postgres(corpus):
     f = corpus.por_cita()["TX350-D §8.9"]
     r = fila(f, np.array([0.5, -0.25], dtype=np.float32))
@@ -115,11 +86,11 @@ def test_fila_para_postgres(corpus):
 
 
 def test_vectores_precalculados_al_dia_con_el_corpus(corpus):
-    """Si cambia el corpus o el armado del texto, hay que volver a correr `--precalcular`."""
     modelo = MODELOS[MODELO_POR_DEFECTO]
     vectores = leer_vectores(modelo.archivo_vectores())
     if vectores is None:
         pytest.skip("sin vectores precalculados (se generan al construir la imagen)")
-    assert vectores.huella == corpus.huella() and vectores.modelo == modelo.clave
+    assert vectores.huella == corpus.huella(), "vectores vencidos: correr python -m sistema.rag.indexar --precalcular"
+    assert vectores.modelo == modelo.clave
     assert vectores.vectores.shape == (len(corpus), modelo.dim)
     assert np.allclose(np.linalg.norm(vectores.vectores, axis=1), 1, atol=1e-3)

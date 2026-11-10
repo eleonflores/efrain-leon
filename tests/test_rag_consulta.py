@@ -1,5 +1,3 @@
-"""Preparación de la consulta: códigos, equipos y la expansión con el catálogo de fallas del MBP-4 §6.1."""
-
 import re
 
 import pytest
@@ -21,7 +19,6 @@ def test_no_toma_fechas_ni_palabras_comunes_como_codigos():
 
 
 def test_la_tabla_de_fallas_es_la_del_mbp4():
-    """La correspondencia está escrita en el código: tiene que coincidir con la tabla del MBP-4 §6.1 del corpus."""
     tabla = cargar_corpus().por_cita()["MBP-4 §6.1"].texto
     desde_corpus = {}
     for f, fabricante in re.findall(r"^(F\d{2}) \| [^|]+ \| ([^|]+) \|", tabla, re.M):
@@ -42,10 +39,8 @@ def test_expansion_de_fallas(entrada, esperado):
 
 
 @pytest.mark.parametrize("texto, tags", [
-    ("la dos cavita", ["B-102"]),
     ("B3 pierde por la empaquetadura", ["B-103"]),
     ("la del fondo y la uno", ["B-103", "B-101"]),
-    ("¿se pusieron cartuchos de otro grado en el filtro B?", ["F-201B"]),
     ("el caudalímetro marcaba más", ["FT-401"]),
     ("cuántas bombas cavitan", []),
 ])

@@ -50,18 +50,17 @@ def test_desvio_sostenido_de_sensor_escala_una_sola_vez(planta):
     assert m.lectura("F-201B", "presion_diferencial", 1.8, t0 + timedelta(minutes=40)) is None
 
 
-def test_pico_aislado_y_bomba_parada_no_escalan(planta):
+def test_pico_aislado_no_escala(planta):
     m = MonitorSensores(planta, persistencia=timedelta(minutes=30))
     t0 = datetime(2026, 11, 3, 8, 0)
     assert m.lectura("B-101", "vibracion", 8.0, t0) is None
-    assert m.lectura("B-101", "vibracion", 3.0, t0 + timedelta(minutes=5)) is None      # volvió: era un pico
-    assert m.lectura("B-101", "vibracion", 8.0, t0 + timedelta(minutes=40)) is None     # empieza de nuevo
-    assert m.lectura("B-103", "presion_descarga", None, t0) is None                     # parada: sin dato
+    assert m.lectura("B-101", "vibracion", 3.0, t0 + timedelta(minutes=5)) is None
+    assert m.lectura("B-101", "vibracion", 8.0, t0 + timedelta(minutes=40)) is None     # el conteo empieza de nuevo
 
 
 def test_bomba_parada_no_es_un_desvio_de_la_descarga(planta):
-    """La reserva parada no publica nulo: su descarga marca ~1,6 kg/cm² (visto en la planta real)."""
     m = MonitorSensores(planta, persistencia=timedelta(minutes=30))
     t0 = datetime(2026, 11, 3, 8, 0)
     for minutos in (0, 20, 40, 60):
         assert m.lectura("B-103", "presion_descarga", 1.6, t0 + timedelta(minutes=minutos)) is None
+    assert m.lectura("B-103", "presion_descarga", None, t0 + timedelta(minutes=80)) is None

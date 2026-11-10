@@ -1,5 +1,3 @@
-"""Registro, adaptador LangChain y servidor MCP de las tools de consulta (todo en proceso, sin red)."""
-
 import asyncio
 import json
 
@@ -23,8 +21,6 @@ def api():
     with simular_planta() as m:
         yield m
 
-
-# ---------------------------------------------------------------- registro
 
 def test_contratos_estrictos_y_descripciones_completas():
     assert list(HERRAMIENTAS) == NOMBRES
@@ -58,8 +54,6 @@ async def test_falla_inesperada_no_se_escapa():
     assert salida.codigo == "ERROR_INTERNO" and not salida.reintentable
 
 
-# ---------------------------------------------------------------- LangChain
-
 async def test_structured_tools_de_langchain(api):
     tools = {t.name: t for t in herramientas_langchain(recursos())}
     assert list(tools) == NOMBRES
@@ -81,8 +75,6 @@ async def test_errores_en_langchain_vuelven_como_tool_message(api, args, codigo)
     assert msg.status == "error"
     assert json.loads(msg.content)["codigo"] == codigo
 
-
-# ---------------------------------------------------------------- servidor MCP
 
 async def test_mcp_lista_las_tools_de_solo_lectura():
     async with Client(crear_servidor(recursos())) as cliente:

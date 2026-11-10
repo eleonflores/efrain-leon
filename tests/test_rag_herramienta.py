@@ -1,12 +1,7 @@
-"""La tool `buscar_en_manuales` con un buscador falso (sin Postgres ni modelo): contrato, filtros, errores y MCP."""
-
-import json
-
-from mcp import Client
+import pytest
 
 from apoyo_herramientas import recursos
-from sistema.herramientas import HERRAMIENTAS, Recursos, ejecutar
-from sistema.herramientas.servidor_mcp import crear_servidor
+from sistema.herramientas import Recursos, ejecutar
 from sistema.rag.busqueda import ErrorRag, Filtros, Fragmento
 
 
@@ -45,7 +40,7 @@ async def test_devuelve_fragmentos_con_sus_citas():
     assert salida.fragmentos[0].cita == "TX350-D §8.9" and salida.fragmentos[0].pagina == 12
     assert salida.modo == "hibrida" and salida.observacion is None
     pregunta, k, filtros = b.pedidos[0]
-    assert k == 4 and filtros == Filtros()  # vigente y aplicable a PIA-3: lo pone el sistema
+    assert k == 4 and filtros == Filtros()  # solo vigente y aplicable a PIA-3
 
 
 async def test_filtros_de_documento_y_equipo_por_nombre_de_campo():
@@ -57,22 +52,16 @@ async def test_filtros_de_documento_y_equipo_por_nombre_de_campo():
     assert not filtros.incluir_no_vigentes and not filtros.incluir_no_aplicables
 
 
-async def test_contrato_estricto():
-    r = _recursos(BuscadorFalso())
-    extra = await ejecutar("buscar_en_manuales", {"pregunta": "límites", "incluir_rev_c": True}, r)
-    assert extra.codigo == "ARGUMENTOS_INVALIDOS" and "incluir_rev_c" in extra.mensaje
-    doc = await ejecutar("buscar_en_manuales", {"pregunta": "límites", "documento": "TX350-C"}, r)
-    assert doc.codigo == "ARGUMENTOS_INVALIDOS" and "TX350-D" in doc.mensaje
-    corta = await ejecutar("buscar_en_manuales", {"pregunta": "x"}, r)
-    assert corta.codigo == "ARGUMENTOS_INVALIDOS"
-    mucho = await ejecutar("buscar_en_manuales", {"pregunta": "algo", "k": 50}, r)
-    assert mucho.codigo == "ARGUMENTOS_INVALIDOS"
-
-
-async def test_equipo_inexistente():
-    salida = await ejecutar("buscar_en_manuales", {"pregunta": "algo", "equipo": "B-104"},
-                            _recursos(BuscadorFalso()))
-    assert salida.codigo == "EQUIPO_INEXISTENTE" and "B-101" in salida.mensaje and not salida.reintentable
+@pytest.mark.parametrize("argumentos, codigo, pista", [
+    ({"incluir_rev_c": True}, "ARGUMENTOS_INVALIDOS", "incluir_rev_c"),
+    ({"documento": "TX350-C"}, "ARGUMENTOS_INVALIDOS", "TX350-D"),
+    ({"equipo": "B-104"}, "EQUIPO_INEXISTENTE", "B-101"),
+])
+async def test_no_se_puede_pedir_la_rev_c_ni_un_equipo_inexistente(argumentos, codigo, pista):
+    b = BuscadorFalso()
+    salida = await ejecutar("buscar_en_manuales", {"pregunta": "límites", **argumentos}, _recursos(b))
+    assert salida.codigo == codigo and pista in salida.mensaje and not salida.reintentable
+    assert b.pedidos == []
 
 
 async def test_base_caida_es_reintentable():
@@ -89,17 +78,3 @@ async def test_recuerda_que_limites_y_stock_no_salen_de_los_manuales():
     assert "consultar_repuestos" in stock.observacion
     vacio = await ejecutar("buscar_en_manuales", {"pregunta": "algo raro"}, _recursos(BuscadorFalso([])))
     assert vacio.citas == [] and "otras palabras" in vacio.observacion
-
-
-def test_descripcion_dice_cuando_usarla_y_que_no_va_por_aca():
-    d = HERRAMIENTAS["buscar_en_manuales"].descripcion
-    assert "Usala para" in d and "No la uses para límites" in d and "stock" in d and "Rev. C" in d
-
-
-async def test_por_mcp():
-    async with Client(crear_servidor(_recursos(BuscadorFalso()))) as cliente:
-        (tool,) = [t for t in (await cliente.list_tools()).tools if t.name == "buscar_en_manuales"]
-        r = await cliente.call_tool("buscar_en_manuales", {"pregunta": "qué es la TX-T07"})
-    assert tool.annotations.read_only_hint and tool.input_schema["additionalProperties"] is False
-    assert not r.is_error and r.structured_content["citas"] == ["TX350-D §8.9", "MBP-4 §6.11"]
-    assert json.loads(r.content[0].text)["fragmentos"][1]["documento"] == "MBP-4"

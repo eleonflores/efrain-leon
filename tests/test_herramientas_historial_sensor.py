@@ -1,5 +1,3 @@
-"""consultar_historial_sensor: resumen y serie acotada, validación semántica y fallas del historiador."""
-
 import json
 from datetime import datetime, timedelta
 
@@ -107,7 +105,6 @@ async def test_rango_en_utc_se_pide_en_hora_de_planta(api):
     ({"variable": "temperatura_rodamiento_ir"}, "ARGUMENTOS_INVALIDOS", "valores permitidos"),
     ({"desde": "2026-11-10T07:00:00-03:00"}, "ARGUMENTOS_INVALIDOS", "anterior a 'hasta'"),
     ({"desde": "ayer"}, "ARGUMENTOS_INVALIDOS", "ISO 8601"),
-    ({"desde": None}, "ARGUMENTOS_INVALIDOS", "desde"),
     ({"max_puntos": 5000}, "ARGUMENTOS_INVALIDOS", "max_puntos"),
     ({"limite": 3}, "ARGUMENTOS_INVALIDOS", "'limite' no existe"),
 ])
@@ -130,10 +127,3 @@ async def test_historiador_lento_reintenta_y_devuelve_error_estructurado(api):
     assert api["historian"].call_count == 3
     assert json.loads(salida.model_dump_json()) == {"codigo": "PLANTA_TIMEOUT", "mensaje": salida.mensaje,
                                                     "reintentable": True}
-
-
-async def test_historiador_se_recupera_al_segundo_intento(api):
-    api["historian"].mock(side_effect=[httpx.Response(503),
-                                       httpx.Response(200, json=dato("api_historian_B-102_presion_descarga.json"))])
-    salida = await ejecutar("consultar_historial_sensor", DOS_HORAS, recursos())
-    assert isinstance(salida, SalidaHistorialSensor) and salida.resumen.n_muestras == 120

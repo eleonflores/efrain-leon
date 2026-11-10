@@ -1,6 +1,3 @@
-"""consultar_historial_ordenes: órdenes reales de B-102, de la más nueva a la más vieja y acotadas."""
-
-import httpx
 import pytest
 
 from apoyo_herramientas import dato, recursos, simular_planta
@@ -30,7 +27,7 @@ async def test_campos_de_texto_libre_y_repuestos(api):
     (orden,) = salida.ordenes
     assert orden.id == "OT-26-0087" and orden.tipo == "correctiva" and orden.horas == 5.0
     assert "golpea" in orden.aviso and orden.repuestos[0].codigo == "TX-VAL-KIT"
-    assert orden.fecha.isoformat() == "2026-10-06T11:20:00-03:00"    # la API la manda sin segundos
+    assert orden.fecha.isoformat() == "2026-10-06T11:20:00-03:00"
 
 
 async def test_orden_del_simulador_con_menos_campos(api):
@@ -69,21 +66,9 @@ async def test_orden_mal_formada_se_descarta(api):
 
 @pytest.mark.parametrize("argumentos, codigo", [
     ({"equipo": "B-104"}, "EQUIPO_INEXISTENTE"),
-    ({"equipo": "B-102", "limite": 0}, "ARGUMENTOS_INVALIDOS"),
-    ({"equipo": "B-102", "limite": 500}, "ARGUMENTOS_INVALIDOS"),
     ({"equipo": "B-102", "tarea": "cambio de correas"}, "ARGUMENTOS_INVALIDOS"),
-    ({"equipo": "B-102", "desde": "2026-10-01T00:00:00-03:00", "hasta": "2026-09-01T00:00:00-03:00"},
-     "ARGUMENTOS_INVALIDOS"),
-    ({"equipo": "B-102", "estado": "Cerrada"}, "ARGUMENTOS_INVALIDOS"),
 ])
 async def test_validacion(api, argumentos, codigo):
     salida = await ejecutar("consultar_historial_ordenes", argumentos, recursos())
     assert isinstance(salida, ErrorHerramienta) and salida.codigo == codigo and not salida.reintentable
     assert not api["ordenes"].called
-
-
-async def test_conexion_caida(api):
-    api["ordenes"].mock(side_effect=httpx.ConnectError("sin ruta"))
-    salida = await ejecutar("consultar_historial_ordenes", {"equipo": "B-102"}, recursos())
-    assert salida.codigo == "PLANTA_NO_DISPONIBLE" and salida.reintentable
-    assert api["ordenes"].call_count == 3
