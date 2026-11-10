@@ -48,8 +48,8 @@ El prompt de producción le da a Whisper el vocabulario y la forma de dictar de 
 seiscientos psi de descarga. El filtro B me dio uno ocho de diferencial."): el error por palabra bajó de 6,5 % a 1,2 %.
 
 Whisper small es el que mejor transcribe lo que puntúa (números, equipos, unidades) y entra holgado en los 30 s que
-tiene la alerta de seguridad: en `fuga-sin-enlace` la alerta salió 10,9 s después de la nota, con el audio bajado,
-transcripto y evaluado. Parakeet es más rápido pero a veces cambia de idioma a mitad de nota ("The 1 is in 115
+tiene la alerta de seguridad: en la corrida final del corrector, en `fuga-sin-enlace`, la alerta salió 4,0 s
+después de la nota, con el enlace caído y el audio bajado, transcripto y evaluado. Parakeet es más rápido pero a veces cambia de idioma a mitad de nota ("The 1 is in 115
 kilograms") y junta los diferenciales ("uno dos" → 12). Turbo es más preciso en general pero tarda más de lo que la
 alerta puede esperar en 2 CPU.
 

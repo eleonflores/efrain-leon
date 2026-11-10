@@ -150,6 +150,13 @@ python evaluacion/evaluar_partes.py
 El corrector de Novit también se puede correr localmente desde el repo de la planta:
 `python correccion/corregir.py --repo ../efrain-leon --escenarios martes-tranquilo fuga-sin-enlace`.
 
+**Resultado con el corrector de Novit** (clon limpio de este repo, `martes-tranquilo` + `fuga-sin-enlace`):
+**91,3 / 100, aprueba, sin faltas eliminatorias**
+([informe](evaluacion/corrector/informe-2026-11-10.md)). Todos los criterios medidos están en su máximo posible:
+A2 y A3 no llegan al 100 % porque tres de las notas de esos escenarios no tienen ningún valor numérico (una nota de
+seguridad y "la bomba está parada, en reserva"), y el corrector solo cuenta como borrador uno con valores. La alerta
+de seguridad salió 4 s después de la nota, con el enlace caído; 0 mensajes inválidos.
+
 ## Estructura
 
 ```text
