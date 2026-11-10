@@ -21,7 +21,7 @@ class Config:
     llm_modelo: str = field(default_factory=lambda: _env("LLM_MODELO", "qwen3.5:2b"))
     llm_hilos: int = field(default_factory=lambda: int(_env("LLM_HILOS", "2")))
     llm_timeout_s: float = field(default_factory=lambda: float(_env("LLM_TIMEOUT_S", "45")))
-    stt_modelo: str = field(default_factory=lambda: _env("STT_MODELO", "small"))
+    stt_modelo: str = field(default_factory=lambda: _env("STT_MODELO", "whisper:small"))
     stt_hilos: int = field(default_factory=lambda: int(_env("STT_HILOS", "2")))
     latido_s: float = field(default_factory=lambda: float(_env("LATIDO_S", "30")))
     sondeo_enlace_s: float = field(default_factory=lambda: float(_env("SONDEO_ENLACE_S", "10")))

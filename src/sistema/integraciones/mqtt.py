@@ -63,7 +63,10 @@ class Bus:
                             except (json.JSONDecodeError, UnicodeDecodeError):
                                 log.warning("Mensaje no JSON en %s", m.topic)
                                 continue
-                            await manejador(str(m.topic), datos)
+                            try:
+                                await manejador(str(m.topic), datos)
+                            except Exception:  # noqa: BLE001
+                                log.exception("Mensaje descartado en %s", m.topic)
                     finally:
                         envio.cancel()
             except aiomqtt.MqttError as e:
