@@ -1,13 +1,3 @@
-"""Persistencia en PostgreSQL 16 (pgvector): notas, diálogo, partes, eventos, registro de pasos y cola a la nube.
-
-- El estado de la conversación de cada nota (nota, transcripción, borrador, intento, mensajes de tablet) se guarda en
-  cada transición: si la PC de planta se reinicia, el diálogo sigue donde estaba.
-- `pasos` es el registro de trazabilidad (enunciado, F): modelo, herramienta y argumentos, tokens, costo y tiempo.
-- `salida_nube` es la cola de lo que tiene que salir de la planta; se vacía en orden cuando hay enlace y nunca
-  duplica (clave = id del evento).
-- La política de qué se recuerda y por cuánto tiempo está en `docs/memoria.md`.
-"""
-
 from __future__ import annotations
 
 import asyncio
@@ -113,8 +103,6 @@ class Base:
             cur = await self._con.execute(sql, params)
             return await cur.fetchall() if cur.description else []
 
-    # ------------------------------------------------------------------ notas y diálogo
-
     async def guardar_nota(self, nota: dict, fase: str) -> None:
         await self._exec(
             """INSERT INTO notas (id, recorrida_id, ts, operador, audio_url, fotos, fase)
@@ -147,8 +135,6 @@ class Base:
                                  (_j(respuesta), mensaje_id))
         return filas[0]["nota_id"] if filas else None
 
-    # ------------------------------------------------------------------ partes y eventos
-
     async def guardar_parte(self, nota_id: str, estado: str, filas: list[dict], ts) -> None:
         confirmado = datetime.now(timezone.utc) if estado == "Confirmado" else None
         await self._exec(
@@ -158,12 +144,10 @@ class Base:
             (nota_id, estado, _j(filas), ts, confirmado))
 
     async def guardar_evento(self, evento: dict, contexto: dict | None = None) -> bool:
-        """True si el evento es nuevo (los ids son idempotentes)."""
+        """True si el evento es nuevo."""
         filas = await self._exec("INSERT INTO eventos (id, payload, contexto) VALUES (%s, %s, %s) "
                                  "ON CONFLICT (id) DO NOTHING RETURNING id", (evento["id"], _j(evento), _j(contexto)))
         return bool(filas)
-
-    # ------------------------------------------------------------------ trazabilidad
 
     async def registrar_paso(self, nota_id: str | None, etapa: str, *, modelo: str | None = None,
                              herramienta: str | None = None, argumentos: dict | None = None, tokens_entrada: int = 0,
@@ -178,8 +162,6 @@ class Base:
     async def consumo_por_modelo(self) -> list[dict]:
         return await self._exec("SELECT modelo, sum(tokens_entrada)::int AS entrada, sum(tokens_salida)::int AS salida, "
                                 "sum(duracion_ms)::int AS ms FROM pasos WHERE modelo IS NOT NULL GROUP BY modelo")
-
-    # ------------------------------------------------------------------ cola a la nube
 
     async def encolar(self, id_: str, tipo: str, payload: dict) -> None:
         await self._exec("INSERT INTO salida_nube (id, tipo, payload) VALUES (%s, %s, %s) ON CONFLICT (id) DO NOTHING",

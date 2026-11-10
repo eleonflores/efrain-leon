@@ -1,13 +1,4 @@
-"""Registro de las tools de consulta: nombre, descripción para el modelo, contratos y cómo ejecutarlas.
-
-`ejecutar()` es el único camino para correr una tool, lo use el agente (vía LangChain) o un cliente MCP. Aplica las
-capas en orden: validación sintáctica (Pydantic, `extra="forbid"`) → validación semántica (dentro de cada consulta) →
-ejecución con un timeout total. Nunca lanza: cualquier falla vuelve como `ErrorHerramienta` con `codigo`, `mensaje`
-y `reintentable`, para que el loop siga y el modelo pueda corregir. Los reintentos ante fallas transitorias de la
-planta ya los hace el cliente HTTP; acá no se reintenta de nuevo.
-
-Para sumar una tool se agrega una `Herramienta` a `HERRAMIENTAS` (así se sumó `buscar_en_manuales`, el RAG).
-"""
+"""Registro de las tools de consulta: nombre, descripción para el modelo, contratos y cómo ejecutarlas."""
 
 from __future__ import annotations
 
@@ -35,7 +26,6 @@ from sistema.integraciones.planta_api import ErrorPlanta
 
 log = logging.getLogger(__name__)
 
-# Cubre el peor caso del cliente HTTP (3 intentos de 5 s más el backoff) con margen.
 TIMEOUT_TOOL_S = 20.0
 
 GARANTIAS = ("\n\nSolo lectura e idempotente: no modifica nada. Si falla devuelve {codigo, mensaje, reintentable}: "
@@ -183,15 +173,12 @@ async def ejecutar(nombre: str, argumentos: dict[str, Any] | BaseModel, recursos
 
 
 def a_json(resultado: BaseModel) -> str:
-    """Texto compacto para el modelo: sin los campos vacíos, que en estas salidas son muchos."""
+    """Texto compacto para el modelo, sin los campos vacíos."""
     return resultado.model_dump_json(exclude_none=True)
 
 
 def herramientas_langchain(recursos: Recursos | None = None) -> list[StructuredTool]:
-    """Las tools como `StructuredTool` asíncronas (args_schema = contrato de entrada).
-
-    Una falla vuelve como `ToolMessage` con `status="error"` y el JSON del `ErrorHerramienta` como contenido.
-    """
+    """Las tools como `StructuredTool` asíncronas; una falla vuelve como `ToolMessage` con `status="error"`."""
     recursos = recursos or Recursos()
 
     def crear(h: Herramienta) -> StructuredTool:

@@ -1,16 +1,3 @@
-"""Cliente HTTP de solo lectura para la API de la planta (`PLANTA_URL`, en Docker `http://sim:8100`).
-
-Lo usan las tools de consulta. Cada GET tiene timeout propio y se reintenta solo ante fallas transitorias (timeout,
-conexión caída, 5xx), con backoff exponencial y como mucho `reintentos` veces: un 4xx o un JSON roto no mejoran
-reintentando. Si no hay caso, sale `ErrorPlanta` con un código estable y si conviene volver a intentar más tarde.
-
-Dos detalles de la API real que este módulo absorbe:
-- El historiador compara las fechas como texto contra timestamps con `-03:00`: un `desde` en UTC (`...Z`) devuelve
-  basura. Por eso toda fecha se manda convertida a la hora de la planta, con offset explícito y precisión de segundos.
-- La planta está en la LAN: nunca se sale por el proxy del enlace (`HTTP(S)_PROXY`), que se cae con el enlace. De ahí
-  `trust_env=False`.
-"""
-
 from __future__ import annotations
 
 import asyncio
@@ -26,26 +13,22 @@ from sistema.config import CONFIG
 
 log = logging.getLogger(__name__)
 
-# America/Argentina/Buenos_Aires no tiene horario de verano desde 2009: un offset fijo evita depender de tzdata.
 ZONA_PLANTA = timezone(timedelta(hours=-3))
 
 
 @functools.cache
 def _contexto_ssl() -> ssl.SSLContext:
-    """Uno solo para todo el proceso: armarlo cuesta (lee los certificados) y cada GET abre un cliente nuevo."""
     return ssl.create_default_context()
 
 
 class ErrorPlanta(Exception):
-    """Falla al consultar la planta, ya clasificada para devolverla como resultado de una tool."""
-
     def __init__(self, codigo: str, mensaje: str, reintentable: bool):
         super().__init__(mensaje)
         self.codigo, self.mensaje, self.reintentable = codigo, mensaje, reintentable
 
 
 def a_hora_planta(momento: datetime) -> datetime:
-    """Lleva una fecha a la hora de la planta. Una fecha sin offset se toma como hora de planta."""
+    """Una fecha sin offset se toma como hora de planta."""
     if momento.tzinfo is None:
         return momento.replace(tzinfo=ZONA_PLANTA)
     return momento.astimezone(ZONA_PLANTA)
@@ -60,9 +43,6 @@ def _sin_nulos(params: dict[str, Any]) -> dict[str, Any]:
 
 
 class ClientePlanta:
-    """Cada GET abre su propio `httpx.AsyncClient`: el cliente no queda atado a un event loop y la planta está en
-    la LAN, así que no hay conexión que valga la pena mantener."""
-
     def __init__(self, url: str | None = None, *, timeout_s: float = 5.0, reintentos: int = 2,
                  backoff_s: float = 0.5):
         self.url = (url or CONFIG.planta_url).rstrip("/")
@@ -70,7 +50,7 @@ class ClientePlanta:
         self._definicion: dict | None = None
 
     async def definicion(self) -> dict:
-        """`GET /api/planta`: equipos, sensores y límites. No cambia mientras corre la planta: se pide una vez."""
+        """`GET /api/planta`: equipos, sensores y límites."""
         if self._definicion is None:
             datos = await self._get("/api/planta")
             if not isinstance(datos, dict) or not isinstance(datos.get("equipos"), list):

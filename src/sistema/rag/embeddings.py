@@ -1,16 +1,4 @@
-"""Modelo de embeddings local (ONNX en CPU, dentro del proceso Python) y los vectores precalculados del corpus.
-
-Restricciones de la PC de planta: 4 CPU y 8 GB para todo el sistema, y el LLM y la transcripción ya usan casi todo.
-Por eso el modelo es chico, cuantizado a int8, corre con `fastembed` (onnxruntime, sin PyTorch) y con 2 hilos, y no
-pasa por Ollama. La comparación de candidatos (calidad de recuperación, RAM y latencia) está en `evaluacion/rag/`.
-
-El corpus no se embebe al arrancar: lo hace `python -m sistema.rag.indexar --precalcular` al construir la imagen y
-deja `datos/documentos/embeddings_<modelo>.npz` (citas, vectores y la huella del corpus). Al arrancar solo se cargan
-esos vectores en Postgres. En runtime el modelo se usa únicamente para la pregunta (una inferencia de ~10 ms).
-
-El modelo también queda dentro de la imagen (la red de planta no tiene internet): `fastembed` lo guarda en
-`FASTEMBED_CACHE_PATH` (en la imagen, `/modelos/fastembed`). Se carga recién en la primera consulta.
-"""
+"""Modelo de embeddings local (ONNX en CPU, dentro del proceso Python) y los vectores precalculados del corpus."""
 
 from __future__ import annotations
 
@@ -51,7 +39,6 @@ MODELOS: dict[str, ModeloEmbeddings] = {m.clave: m for m in (
     ModeloEmbeddings("minilm-l12", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
                      "Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q", "model_optimized.onnx", 384, 128,
                      nativo_fastembed=True),
-    # Bilingüe español-inglés de Jina, cuantizado a int8 por el autor (base: 768 dimensiones, más lento).
     ModeloEmbeddings("jina-es-int8", "jinaai/jina-embeddings-v2-base-es-int8", "jinaai/jina-embeddings-v2-base-es",
                      "onnx/model_quantized.onnx", 768, 512),
 )}
@@ -70,7 +57,7 @@ def hilos_configurados() -> int:
 
 
 def cache_modelos() -> str | None:
-    """Dónde guarda fastembed los modelos. En la imagen, una ruta fija junto al cache de Hugging Face."""
+    """Dónde guarda fastembed los modelos."""
     if os.environ.get("FASTEMBED_CACHE_PATH"):
         return os.environ["FASTEMBED_CACHE_PATH"]
     if os.environ.get("HF_HOME"):
@@ -142,7 +129,7 @@ class VectoresCorpus:
 
 
 def precalcular(corpus: Corpus, embedder: Embedder, destino: Path | None = None) -> Path:
-    """Embebe todo el corpus y lo guarda en `embeddings_<modelo>.npz`. Lo corre el Dockerfile al construir."""
+    """Embebe todo el corpus y lo guarda en `embeddings_<modelo>.npz`."""
     destino = destino or embedder.modelo.archivo_vectores()
     vectores = embedder.pasajes([f.texto_para_embeber() for f in corpus.fragmentos])
     np.savez_compressed(destino, citas=np.array([f.cita for f in corpus.fragmentos]), vectores=vectores,

@@ -1,12 +1,8 @@
 """Comandos del índice del RAG.
 
     python -m sistema.rag.indexar --precalcular              # embebe el corpus (al construir la imagen)
-    python -m sistema.rag.indexar --precalcular --modelo minilm-l12
     python -m sistema.rag.indexar --cargar                   # carga Postgres ($DATABASE_URL) si hace falta
     python -m sistema.rag.indexar --cargar --forzar          # borra y vuelve a cargar
-
-`--precalcular` también deja el modelo en el cache de fastembed (`FASTEMBED_CACHE_PATH`), así que en el Dockerfile un
-solo `RUN` hornea el modelo y los vectores. `--cargar` hace lo mismo que el sistema al arrancar (`asegurar_indice`).
 """
 
 from __future__ import annotations
@@ -22,7 +18,7 @@ from sistema.rag.embeddings import MODELOS, Embedder, modelo_configurado, precal
 
 
 def correr(corrutina):
-    """`asyncio.run` con el loop que psycopg necesita en Windows (el Proactor no le sirve); en Linux, el normal."""
+    """`asyncio.run` con el loop que psycopg acepta en Windows (`SelectorEventLoop`)."""
     if sys.platform == "win32":
         return asyncio.run(corrutina, loop_factory=asyncio.SelectorEventLoop)
     return asyncio.run(corrutina)

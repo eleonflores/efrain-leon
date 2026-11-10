@@ -1,9 +1,3 @@
-"""Acceso al LLM local (Ollama) a través de LangChain, con registro de cada paso.
-
-Todo llamado al modelo pasa por acá: así queda registrado el modelo, los tokens, el costo (cero: es local) y el
-tiempo de cada paso (requerimiento F del enunciado), y se aplica el presupuesto de la nota (módulo 1.4).
-"""
-
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +15,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class PresupuestoAgotado(Exception):
-    """La nota ya usó todos los pasos o tokens que tenía."""
+    pass
 
 
 @dataclass
@@ -55,11 +49,10 @@ class ModeloLocal:
         self.timeout_s = timeout_s
         self.chat = ChatOllama(model=modelo, base_url=url, temperature=0, reasoning=False, num_ctx=num_ctx,
                                num_predict=num_predict, num_thread=hilos, keep_alive="24h")
-        self._turno = asyncio.Semaphore(1)       # CPU de planta: un llamado por vez
+        self._turno = asyncio.Semaphore(1)
 
     async def cargar(self) -> float:
-        """Deja el modelo en memoria sin generar nada (casi no usa CPU). Un calentamiento con inferencia ocupaba la
-        CPU 45 s justo cuando llega la primera nota y demoraba la transcripción de la alerta de seguridad."""
+        """Carga el modelo en memoria sin generar; devuelve los segundos que tardó."""
         t0 = time.perf_counter()
         async with httpx.AsyncClient(trust_env=False, timeout=180) as http:
             r = await http.post(f"{self.url}/api/generate", json={"model": self.nombre, "keep_alive": "24h"})
@@ -79,7 +72,7 @@ class ModeloLocal:
                 salida = await asyncio.wait_for(runnable.ainvoke([("system", instrucciones), ("human", entrada)]),
                                                 self.timeout_s)
                 crudo, resultado, error = salida["raw"], salida["parsed"], salida.get("parsing_error")
-            except Exception as e:  # noqa: BLE001  timeouts y errores de Ollama terminan en un paso fallido
+            except Exception as e:  # noqa: BLE001
                 error = e
         uso = (getattr(crudo, "usage_metadata", None) or {}) if crudo is not None else {}
         paso = Paso(etapa, self.nombre, int(uso.get("input_tokens", 0)), int(uso.get("output_tokens", 0)),

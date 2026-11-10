@@ -1,13 +1,5 @@
 """Evalúa la extracción por reglas y la detección sobre notas generadas por el operador virtual de la planta.
 
-Genera recorridas con el mismo código de la planta (`planta_sim.operador.OperadorVirtual` sobre `planta_sim.modelo`),
-con fallas al azar, bombas paradas y ambigüedades, y mide con los criterios de la corrección:
-
-- A2: el primer borrador se confirmaría (`planta_sim.dialogo._comparar`, el mismo criterio del operador);
-- A4: detecta las ambigüedades y no pregunta en las notas claras;
-- B1: la decisión SinNovedad/Escalado por equipo coincide con la del corrector (`correccion/puntuar.py`);
-- cuántas notas no resuelven las reglas y van al LLM.
-
     python evaluacion/reglas/evaluar_reglas.py --repo-planta ../academia2026-tp --notas 400
 """
 

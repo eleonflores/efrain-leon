@@ -1,9 +1,4 @@
-"""Detección en planta: de un parte confirmado o de los sensores a `SinNovedad` / `Escalado`.
-
-Es código determinístico, sin LLM (anexo, bloque B): con los mismos datos, la misma decisión. Los límites salen de la
-hoja de datos (`/api/planta`), nunca del manual Rev. C. La decisión se toma por el tipo de variable y no por el texto
-libre de la observación, para que una frase del modelo no pueda inventar (ni tapar) una anomalía.
-"""
+"""Detección en planta: de un parte confirmado o de los sensores a `SinNovedad` / `Escalado`."""
 
 from __future__ import annotations
 
@@ -13,18 +8,15 @@ from datetime import datetime, timedelta
 from sistema.dominio.planta import Planta
 from sistema.procesamiento.numeros import sin_tildes
 
-# Observaciones del operador que siempre son una anomalía.
 VARIABLES_ANOMALAS = {
     "goteo_empaquetadura": "pérdida por empaquetadura",
     "nivel_aceite_visor": "nivel de aceite bajo",
     "estado_correas": "correas en mal estado",
     "ruido": "ruido anormal",
 }
-# Temperaturas IR (TX350-D §3.2): rodamiento normal 50–70 °C, alarma > 85 °C; carcasa del motor normal 40–60 °C,
-# alarma > 80 °C. Se escala con 5 °C de margen sobre el máximo normal (precisión de la pistola IR), antes de la alarma.
+# máximo normal de TX350-D §3.2 más 5 °C
 UMBRAL_TEMPERATURA_IR = {"temperatura_rodamiento_ir": 75.0, "temperatura_motor_ir": 65.0}
-# Una bomba parada no publica nulo: su descarga cae a ~1,6 kg/cm². Por debajo de esto la bomba está parada (en
-# reserva o mantenimiento): no es un desvío de la alarma baja de 95 kg/cm².
+# descarga por debajo de la cual la bomba está parada (marca ~1,6 kg/cm²)
 BOMBA_PARADA_KG = 30.0
 
 
@@ -72,11 +64,7 @@ class _Seguimiento:
 
 
 class MonitorSensores:
-    """Desvíos sostenidos de los sensores conectados: un pico aislado no escala, uno que dura sí.
-
-    La persistencia se mide en tiempo simulado (`ts` de cada lectura): la planta publica una muestra por tick real, así
-    que la cantidad de muestras por hora cambia con la velocidad de la simulación.
-    """
+    """Escala los desvíos de sensores que duran `persistencia`, medida en el `ts` de las lecturas."""
 
     def __init__(self, planta: Planta, persistencia: timedelta = timedelta(minutes=30)):
         self.planta, self.persistencia = planta, persistencia

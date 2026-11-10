@@ -1,14 +1,6 @@
-"""Evalúa el parte por voz contra la verdad de campo de la planta (`/api/verdad`, abierta fuera de la corrección).
+"""Evalúa el parte por voz contra la verdad de campo (`/api/verdad`, abierta fuera de la corrección).
 
-Se corre después de un escenario con el sistema levantado. Lee la verdad (notas, ambigüedades y la evaluación del
-operador de cada mensaje de la tablet) y lo que publicó el sistema (`/api/registro`) y reporta:
-
-- aciertos por campo del primer borrador de cada nota (equipo, valor, unidad) y partes confirmados al primer intento
-  y al final;
-- si preguntó en las notas ambiguas y solo en ellas;
-- latencia real desde que la planta emite la nota hasta el primer mensaje en la tablet (y hasta la alerta, en las
-  notas inseguras);
-- tokens por modelo (lo que el sistema publica en `sistema/metricas`).
+Se corre después de un escenario, con el sistema levantado:
 
     python evaluacion/evaluar_partes.py --salida evaluacion/resultados/martes-tranquilo.json
 """

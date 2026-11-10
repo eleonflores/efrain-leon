@@ -1,19 +1,6 @@
-"""Evaluación del RAG contra la suite de Novit (71 preguntas) con su evaluador, `corpus.evaluar.evaluar`.
+"""Evaluación del RAG contra la suite de Novit con su evaluador, `corpus.evaluar` de `$PLANTA_REPO/planta`.
 
-    # Postgres con pgvector (cualquiera; se carga solo):
-    docker run -d --name rag-dev-db -e POSTGRES_USER=sistema -e POSTGRES_PASSWORD=sistema -e POSTGRES_DB=sistema \
-        -p 5433:5432 pgvector/pgvector:0.8.1-pg16
-    # Vectores precalculados de cada modelo candidato:
-    python -m sistema.rag.indexar --precalcular --modelo e5-small-int8
-    python -m sistema.rag.indexar --precalcular --modelo minilm-l12
-    # Evaluación (BM25 de Novit, solo vectores, híbrida y ablaciones) → evaluacion/rag/resultados.json
     DATABASE_URL=postgresql://sistema:sistema@localhost:5433/sistema python evaluacion/rag/evaluar_rag.py
-
-El evaluador se importa del repo de la planta (`$PLANTA_REPO`, por defecto `../academia2026-tp`): es el paquete
-`corpus` de `planta/`. La suite y los fragmentos son las copias de `datos/documentos/` (idénticas a las de Novit).
-
-Cada modelo candidato se mide además en un proceso aparte (`--medir-modelo`) con 2 hilos: tiempo de carga, RAM
-(pico del proceso) y latencia de una consulta, que es lo único que el modelo hace en runtime.
 """
 
 from __future__ import annotations
@@ -34,7 +21,7 @@ sys.path.insert(0, str(RAIZ / "src"))
 PLANTA = Path(os.environ.get("PLANTA_REPO", RAIZ.parent / "academia2026-tp")) / "planta"
 sys.path.insert(0, str(PLANTA))
 
-from corpus.evaluar import BM25, evaluar  # noqa: E402  (paquete del repo de la planta)
+from corpus.evaluar import BM25, evaluar  # noqa: E402
 
 from sistema.rag.busqueda import BuscadorManuales, Filtros  # noqa: E402
 from sistema.rag.corpus import cargar_corpus, ruta_documentos  # noqa: E402
@@ -49,8 +36,7 @@ HILOS = 2
 TODO = Filtros(incluir_no_vigentes=True, incluir_no_aplicables=True)
 NO_APLICAN = {f.cita for f in cargar_corpus().fragmentos if not f.aplica_pia3}
 
-# nombre → (listas, filtros, opciones del buscador). "vectores" e "hibrida" son las configuraciones pedidas; el resto
-# son ablaciones para ver qué aporta cada pieza. "hibrida" usa la fusión por defecto (combinación convexa).
+# nombre → (listas, filtros, opciones del buscador).
 SIN_EXPANSION = {"expandir_codigos": False, "expandir_equipos": False}
 CONFIGS: dict[str, tuple[tuple[str, ...], Filtros, dict]] = {
     "vectores_sin_filtro": (("sem",), TODO, {}),
@@ -62,12 +48,12 @@ CONFIGS: dict[str, tuple[tuple[str, ...], Filtros, dict]] = {
     "hibrida_sin_expansion": (("sem", "lex", "cod"), Filtros(), SIN_EXPANSION),
     "hibrida": (("sem", "lex", "cod"), Filtros(), {}),
 }
-# Para los modelos que no se eligieron alcanza con lo pedido (la léxica no depende del modelo).
+# Las únicas que se corren también con los modelos que no son el primero.
 CONFIGS_COMPARACION = ("vectores_sin_filtro", "vectores", "hibrida_rrf", "hibrida")
 
 
 def rev_c_antes_que_d(citas: list[str], k: int = 10) -> bool:
-    """¿La primera sección del manual de la bomba en los primeros k es de la Rev. C (la vieja le gana a la vigente)?"""
+    """¿La primera sección del manual de la bomba en los primeros k es de la Rev. C?"""
     primera = next((c for c in citas[:k] if c.startswith(("TX350-C ", "TX350-D "))), None)
     return primera is not None and primera.startswith("TX350-C ")
 
@@ -118,7 +104,7 @@ async def evaluar_todo(url: str, modelos: list[str], suite: list[dict], frags: l
 
 
 def medir_modelo(clave: str) -> dict:
-    """Carga el modelo en este proceso y mide RAM y latencia de las consultas de la suite (2 hilos)."""
+    """Carga el modelo en este proceso y mide RAM y latencia de las consultas de la suite."""
     import psutil
 
     proc = psutil.Process()

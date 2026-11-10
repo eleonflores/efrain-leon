@@ -1,27 +1,4 @@
-"""Búsqueda híbrida en los manuales y el historial: semántica + BM25 en Postgres + códigos exactos.
-
-Tres listas, cada una con el mismo filtro previo (vigencia, aplicabilidad a PIA-3 y los filtros del pedido) dentro
-de su `WHERE`, antes del top-k. Filtrar después dejaría menos de k resultados o ninguno, y la Rev. C podría ganarle
-a la D en el ranking aunque después se la descarte.
-
-- **sem**: distancia coseno del vector de la pregunta (`<=>`, índice HNSW con `iterative_scan` para que el filtro no
-  deje la lista corta). Encuentra por significado: "ruido a piedras" → cavitación.
-- **lex**: BM25 sobre el `tsvector` en español (OR de los lexemas de la pregunta, el GIN poda los candidatos y el
-  puntaje usa el IDF de `rag_lexemas`). Encuentra palabras raras exactas que el embedding diluye.
-- **cod**: coincidencia exacta de códigos (`TX-T07`, `OT-25-0026`, `350-EMP-03`), pesada por rareza y el doble si
-  el código está en el título de la sección. Con la expansión del MBP-4 §6.1, `TX-T07` trae también la ficha F09.
-
-**Fusión.** Se midieron las dos (ver `evaluacion/rag/`):
-
-- **RRF** (el criterio del curso): `Σ peso / (k + posición)`. Combina posiciones, no puntajes. Con k = 60 quedó
-  debajo de BM25 en hit@5: con tres listas de 50, una sección que está 1.ª en una sola lista pesa casi lo mismo que
-  otra que está 20.ª en dos, y en este corpus la semántica y la léxica se equivocan en preguntas distintas.
-- **Combinación convexa** (`cc`, la elegida): cada lista se normaliza min-max dentro de la consulta y se suma con su
-  peso (semántica 0,4, léxica 0,6, códigos 0,2). Conserva cuánto mejor es el primero que el segundo. Es la que le gana
-  a BM25 en hit@5 y recall@5, y es estable para pesos semánticos entre 0,2 y 0,5.
-
-Límites de alarma y stock **no** salen de acá: viven en `/api/planta` y en materiales (ver `docs/rag.md`).
-"""
+"""Búsqueda híbrida en los manuales y el historial: semántica + BM25 en Postgres + códigos exactos."""
 
 from __future__ import annotations
 
@@ -44,7 +21,7 @@ FUSION = "cc"
 PESOS_CC = {"sem": 0.4, "lex": 0.6, "cod": 0.2}
 RRF_K = 60
 CANDIDATOS = 50          # por lista, antes de fusionar
-MAX_FRAGMENTOS_CODIGO = 15   # un código que aparece en más fragmentos (5V-1800, T-B-EMP) no discrimina: no entra
+MAX_FRAGMENTOS_CODIGO = 15   # un código que aparece en más fragmentos no entra en la lista de códigos
 BM25_K1, BM25_B = 1.2, 0.75
 LARGO_TEXTO = 700
 
@@ -103,14 +80,14 @@ def condiciones(filtros: Filtros) -> tuple[str, dict]:
         partes.append("tipo_documento = ANY(%(f_tipos)s)")
         params["f_tipos"] = list(filtros.tipos_documento)
     if filtros.equipo:
-        # Las órdenes generales (equipo PLANTA, p. ej. la medición mensual de vibraciones) cuentan para todos.
+        # Las órdenes generales (equipo PLANTA) cuentan para todos.
         partes.append("(%(f_equipo)s = ANY(equipos) OR 'PLANTA' = ANY(equipos))")
         params["f_equipo"] = filtros.equipo
     return (" AND ".join(partes) or "true"), params
 
 
 def _posiciones(lista: Sequence[str | Candidato]) -> list[tuple[str, int]]:
-    """Citas en orden → posiciones 1, 2, 3…; `Candidato` → su posición (así los empates comparten puesto)."""
+    """Citas en orden → posiciones 1, 2, 3…; `Candidato` → su propia posición."""
     vistos, salida = set(), []
     for x in lista:
         cita, pos = (x, len(salida) + 1) if isinstance(x, str) else (x.cita, x.posicion)
@@ -122,10 +99,7 @@ def _posiciones(lista: Sequence[str | Candidato]) -> list[tuple[str, int]]:
 
 def fusionar_rrf(listas: dict[str, Sequence[str | Candidato]], *, k: int = RRF_K,
                  pesos: dict[str, float] | None = None) -> list[tuple[str, float, tuple[str, ...]]]:
-    """Reciprocal Rank Fusion: `Σ peso / (k + posición)` con posiciones desde 1. Desempata por la mejor posición.
-
-    Devuelve `(cita, puntaje, listas donde apareció)` de mayor a menor puntaje.
-    """
+    """Reciprocal Rank Fusion: `Σ peso / (k + posición)`; devuelve `(cita, puntaje, listas)` de mayor a menor."""
     puntaje: dict[str, float] = {}
     mejor: dict[str, int] = {}
     fuentes: dict[str, list[str]] = {}
@@ -141,11 +115,7 @@ def fusionar_rrf(listas: dict[str, Sequence[str | Candidato]], *, k: int = RRF_K
 
 def fusionar_cc(listas: dict[str, Sequence[Candidato]], *, pesos: dict[str, float] | None = None
                 ) -> list[tuple[str, float, tuple[str, ...]]]:
-    """Combinación convexa: cada lista se lleva a [0, 1] con min-max dentro de la consulta y se suma con su peso.
-
-    Lo que no está en una lista suma 0 por esa lista (igual que el último de la lista). Desempata por la mejor
-    posición. Devuelve `(cita, puntaje, listas donde apareció)` de mayor a menor puntaje.
-    """
+    """Combinación convexa de las listas normalizadas min-max; devuelve `(cita, puntaje, listas)` de mayor a menor."""
     pesos = PESOS_CC if pesos is None else pesos
     total: dict[str, float] = {}
     mejor: dict[str, int] = {}
@@ -219,11 +189,7 @@ df_codigos AS (
 
 
 class BuscadorManuales:
-    """Búsqueda en los manuales y el historial de PIA-3. Abre la conexión y el modelo recién en la primera consulta.
-
-    `listas` elige las búsquedas que se fusionan (("sem",) = solo vectores, ("lex", "cod") = solo léxica) y `fusion`
-    cómo ("cc" o "rrf"). Si el modelo de embeddings no carga, sigue con las listas léxicas y lo informa en `modo`.
-    """
+    """Conecta y carga el modelo en la primera consulta; sin modelo de embeddings sigue con las listas léxicas."""
 
     def __init__(self, url: str | None = None, *, embedder: Embedder | None = None, listas: Sequence[str] = LISTAS,
                  fusion: str = FUSION, pesos: dict[str, float] | None = None, rrf_k: int = RRF_K,
@@ -330,7 +296,7 @@ class BuscadorManuales:
                 for c, p, fuentes in fusion if (d := datos.get(c))]
 
     async def citas(self, pregunta: str, k: int = 20, filtros: Filtros | None = None) -> list[str]:
-        """Solo las citas en orden (lo que pide `corpus.evaluar`)."""
+        """Solo las citas, en orden."""
         consulta = preparar(pregunta, expandir_codigos=self.expandir_codigos, expandir_equipos=self.expandir_equipos)
         fusion = self.fusionar(await self.candidatos_por_lista(consulta, filtros or Filtros()))
         return [c for c, _, _ in fusion[:k]]

@@ -1,10 +1,3 @@
-"""Conexión MQTT con la planta: recibe `planta/#` y publica en `sistema/...`.
-
-Todo lo que se publica se valida antes contra `planta_contrato`: un mensaje inválido no sale (y queda en el log), así
-el criterio F1 no pierde puntos. Si el broker no está, los mensajes esperan en una cola en memoria y salen al
-reconectar (el broker está en la LAN de la planta: no depende del enlace).
-"""
-
 from __future__ import annotations
 
 import asyncio

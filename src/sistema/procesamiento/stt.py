@@ -1,14 +1,4 @@
-"""Transcripción local de las notas de voz (sin enlace, sin nube).
-
-Una interfaz y dos implementaciones, elegidas por `STT_MODELO`:
-- `whisper:<tamaño>`: faster-whisper (CTranslate2) en CPU con int8, español fijo y un prompt con el vocabulario de la
-  planta;
-- `parakeet`: Parakeet TDT 0.6B v3 en ONNX (onnx-asr), cuantizado int8.
-
-Los modelos se descargan al construir la imagen (`python -m sistema.procesamiento.stt --descargar`): la red de planta
-no tiene internet y el corrector borra los volúmenes entre escenarios. La comparación que justifica la elección está
-en `evaluacion/stt/`.
-"""
+"""Transcripción local de las notas de voz."""
 
 from __future__ import annotations
 
@@ -29,7 +19,7 @@ PROMPT = ("Recorrida de la planta de inyección: la uno, la dos, la tres, el fil
 
 
 def wav_a_audio(contenido: bytes) -> np.ndarray:
-    """WAV PCM 16 bits (como lo sirve la planta) → float32 mono a 16 kHz."""
+    """WAV PCM 16 bits → float32 mono a 16 kHz."""
     with wave.open(io.BytesIO(contenido), "rb") as w:
         canales, ancho, sr = w.getnchannels(), w.getsampwidth(), w.getframerate()
         datos = w.readframes(w.getnframes())

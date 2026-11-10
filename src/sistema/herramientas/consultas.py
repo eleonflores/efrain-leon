@@ -1,13 +1,4 @@
-"""Las cinco consultas de solo lectura: equipos, historial de un sensor, historial de órdenes, repuestos y tareas.
-
-Cada una es una función asíncrona `(entrada, recursos) -> salida` que ya recibe la entrada validada por Pydantic
-(capa sintáctica) y hace la validación semántica antes de tocar la red: el equipo existe, la variable es un sensor
-de ese equipo, el código está en el catálogo. Cuando algo no cierra lanza `FalloConsulta` con un mensaje que dice qué
-hacer; el registro lo convierte en un `ErrorHerramienta` para el modelo. Ninguna escribe nada.
-
-El historiador guarda una muestra por minuto de 45 días: nunca se devuelve crudo. Sale un resumen y una serie
-promediada por tramos, acotada a `max_puntos`.
-"""
+"""Las cinco consultas de solo lectura: equipos, historial de un sensor, historial de órdenes, repuestos y tareas."""
 
 from __future__ import annotations
 
@@ -44,11 +35,10 @@ class FalloConsulta(Exception):
 
 @dataclass
 class Recursos:
-    """Lo que necesitan las consultas para correr. En los tests se arma con dobles."""
+    """Lo que necesitan las consultas para correr."""
 
     planta: ClientePlanta = field(default_factory=ClientePlanta)
     materiales: RepositorioMateriales = field(default_factory=MaterialesYaml)
-    # Búsqueda en manuales (RAG). Conecta con Postgres y carga el modelo recién en la primera consulta.
     manuales: BuscadorManuales = field(default_factory=BuscadorManuales)
 
 
@@ -117,7 +107,7 @@ async def consultar_equipos(e: EntradaEquipos, r: Recursos) -> SalidaEquipos:
 # ---------------------------------------------------------------- historial de un sensor
 
 def _puntos(crudos: list[dict], desde: datetime, hasta: datetime | None) -> list[tuple[datetime, float | None]]:
-    """Parsea `[{ts, valor}]` y descarta lo que caiga fuera del rango (resguardo ante el filtro de la API)."""
+    """Parsea `[{ts, valor}]` y descarta lo que caiga fuera del rango."""
     puntos = []
     for p in crudos:
         try:

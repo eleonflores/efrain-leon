@@ -1,16 +1,4 @@
-"""Del dictado del operador al borrador del parte.
-
-Reparto de responsabilidades (módulos 1.1 y 1.2: el modelo propone, el código dispone):
-
-1. `numeros.normalizar_numeros` pasa los números hablados a dígitos ("mil seiscientos cuarenta" → 1640).
-2. El LLM (salida estructurada con JSON Schema, validada con Pydantic) separa la nota en filas: cómo nombró al
-   equipo, qué variable, el valor, la unidad si la dijo y si sacó foto.
-3. El código resuelve todo lo que tiene que dar siempre lo mismo: el TAG contra `/api/planta`, la unidad por defecto
-   del manómetro de cada bomba, las ambigüedades ("la bomba" a secas, un diferencial dicho "dieciocho"), el rango
-   histórico y las fotos de cada fila.
-
-El texto de la nota entra delimitado y rotulado como dato: lo que diga no cambia ninguna regla.
-"""
+"""Del dictado del operador al borrador del parte."""
 
 from __future__ import annotations
 
@@ -87,7 +75,6 @@ Ejemplo 2
 """
 
 GENERICOS = {"bomba": "bomba", "filtro": "filtro"}
-# Un diferencial de filtro anda entre 0,15 y 1,5 kg/cm²: "dieciocho" es casi seguro "uno ocho" mal dicho.
 DIFERENCIAL_SOSPECHOSO = 10.0
 
 
@@ -136,7 +123,6 @@ def _tipo_por_variable(variable: str) -> str | None:
 
 
 def armar_borrador(dictado: Dictado, planta: Planta, fotos: list[str]) -> list[FilaBorrador]:
-    """Aplica las reglas de la planta a lo que separó el LLM."""
     filas: list[FilaBorrador] = []
     for f in dictado.filas:
         if f.variable == "otra" and f.valor is None and not f.observacion:
@@ -150,7 +136,7 @@ def armar_borrador(dictado: Dictado, planta: Planta, fotos: list[str]) -> list[F
                 tag, candidatos = candidatos[0], []
         unidad = f.unidad or (planta.unidad_por_defecto(tag, f.variable) if tag else None)
         if tag is None and f.variable == "presion_descarga_local":
-            unidad = f.unidad          # sin equipo no se sabe qué manómetro es
+            unidad = f.unidad
         fila = FilaBorrador(tag, f.variable, f.valor, unidad, f.observacion, dicho=f.equipo, candidatos=candidatos)
         if f.variable == "presion_diferencial" and f.valor is not None and f.valor >= DIFERENCIAL_SOSPECHOSO:
             fila.valor_dicho, fila.valor = f.valor, round(f.valor / 10, 2)
@@ -161,7 +147,6 @@ def armar_borrador(dictado: Dictado, planta: Planta, fotos: list[str]) -> list[F
 
 
 def _asignar_fotos(filas: list[FilaBorrador], con_foto: list[bool], fotos: list[str]) -> None:
-    """Las fotos de la nota, en orden, a las filas donde el operador dijo que sacó foto."""
     pendientes = list(fotos)
     for fila, saco in zip(filas, con_foto):
         if saco and pendientes:

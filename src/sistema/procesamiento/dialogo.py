@@ -1,17 +1,4 @@
-"""El diálogo con el operador por la tablet: borrador, preguntas y correcciones.
-
-Qué se manda en cada caso (y por qué, según cómo mide la corrección):
-- **Nota clara:** un borrador con las filas, sin `opciones` (un borrador con opciones cuenta como pregunta).
-- **Equipo ambiguo** ("la bomba" a secas): primero una pregunta con `opciones` y sin filas; el operador elige por
-  equipo. Después, el borrador.
-- **Valor ambiguo** (diferencial "dieciocho"): el borrador con el valor plausible (1,8) y `opciones`: es a la vez
-  pregunta y borrador.
-- **Fuera del rango histórico:** se avisa en el texto del borrador, que ya es un pedido de confirmación.
-- **Condición insegura:** un aviso sin respuesta (`espera_respuesta: false`) con el procedimiento de emergencia.
-
-Las respuestas llegan en texto libre, "como se habla en campo". Primero se prueban las formas conocidas con reglas
-(rápidas y deterministas); lo que no encaja se le pasa al LLM como respaldo.
-"""
+"""Diálogo con el operador por la tablet: borrador, preguntas y correcciones."""
 
 from __future__ import annotations
 
@@ -51,9 +38,6 @@ def nombre_de(planta: Planta, tag: str | None) -> str:
     return e.nombres[0] if e and e.nombres else tag
 
 
-# --------------------------------------------------------------------------------------------- mensajes
-
-
 def texto_borrador(filas: list[FilaBorrador], planta: Planta) -> str:
     partes = []
     for f in filas:
@@ -84,9 +68,6 @@ def pregunta_equipo(fila: FilaBorrador, planta: Planta) -> tuple[str, list[str]]
     texto = f"Dijiste \"{fila.dicho}\"{dato}: ¿de {que} hablás?"
     opciones = [f"{nombre_de(planta, t).capitalize()} ({t})" for t in fila.candidatos]
     return texto, opciones
-
-
-# --------------------------------------------------------------------------------------------- respuestas
 
 
 @dataclass
@@ -158,14 +139,12 @@ def _cerca(a: float | None, b: float | None) -> bool:
 
 
 def aplicar(filas: list[FilaBorrador], correcciones: list[dict], planta: Planta) -> list[FilaBorrador]:
-    """Aplica las correcciones del operador al borrador."""
     filas = list(filas)
     for c in correcciones:
         tag = c["tag"]
         con_valor = [f for f in filas if f.valor is not None]
         if c["tipo"] == "valor":
-            # El operador empareja por equipo: "la dos estaba en 140 gotas por minuto, no en 56" puede referirse al
-            # goteo (que se dictó sin número) aunque el 56 sea la temperatura. Manda la unidad que dijo.
+            # "la dos estaba en 140 gotas por minuto, no en 56": la fila sale de la unidad dicha
             f = _fila_de_la_unidad(filas, tag, c["unidad"], planta)
             if f is None and not _unidad_choca(c["unidad"], tag, planta, con_valor, c["mostrado"]):
                 f = next((f for f in con_valor if f.tag == tag and _cerca(f.valor, c["mostrado"])), None) \

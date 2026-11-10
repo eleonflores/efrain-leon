@@ -1,13 +1,4 @@
-"""Contratos de las tools de consulta: entrada y salida en Pydantic estricto.
-
-Todos los modelos llevan `extra="forbid"` (en el JSON Schema sale `additionalProperties: false`): un campo que el
-modelo inventa es un error que se le devuelve para que corrija, no algo que se ignora en silencio. Las descripciones
-de los campos son documentación para el modelo: dicen el formato y traen un ejemplo.
-
-Los valores cerrados de la entrada (tipo de equipo, variable de sensor) van como `Literal`, así el esquema los
-enumera. En la salida los textos que vienen de la planta quedan como `str`: si la planta agrega un tipo nuevo, la
-consulta no se rompe por eso.
-"""
+"""Contratos de las tools de consulta: entrada y salida en Pydantic estricto."""
 
 from __future__ import annotations
 

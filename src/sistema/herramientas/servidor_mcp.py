@@ -1,17 +1,6 @@
 """Servidor MCP con las tools de consulta de la planta (Streamable HTTP).
 
     python -m sistema.herramientas.servidor_mcp      # escucha en 0.0.0.0:$MCP_PUERTO (8001), endpoint /mcp
-
-Usa el `Server` de bajo nivel del SDK `mcp` 2.x y no `MCPServer`: así el `inputSchema` que ve el cliente es
-exactamente el contrato Pydantic (con `additionalProperties: false`) y no uno derivado de la firma de una función.
-Cada tool se publica con su `outputSchema` y con las annotations `readOnlyHint` e `idempotentHint`.
-
-Los dos tipos de error del protocolo quedan separados: una tool que no existe es un error JSON-RPC; una consulta que
-falla (argumentos inválidos, equipo inexistente, planta caída) es un resultado con `isError: true` y el
-`ErrorHerramienta` en `structuredContent`, para que el modelo lo lea y corrija.
-
-Escucha en todas las interfaces porque corre dentro de la red de Docker; no tiene autenticación, así que el puerto no
-se publica fuera de esa red.
 """
 
 from __future__ import annotations

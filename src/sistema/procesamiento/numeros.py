@@ -1,17 +1,3 @@
-"""Números hablados en español de campo → números.
-
-El operador dicta "mil seiscientos cuarenta psi", "uno ocho de diferencial", "cinco coma dos metros",
-"uno y medio" o "cincuenta y dos grados". La transcripción puede devolverlos en palabras o en dígitos
-("1.640", "1,8"). Este módulo los lleva a una forma única con punto decimal ("1640", "1.8") sin tocar el
-resto del texto, para que la extracción del parte trabaje sobre números y no sobre palabras.
-
-Cuidados:
-- "la uno", "la dos", "bomba tres" son nombres de equipos, no lecturas: se dejan en palabras.
-- "un"/"una" casi siempre son artículos ("un golpeteo"): solo cuentan como 1 dentro de un número compuesto
-  ("cincuenta y un grados", "veintiún") o delante de una unidad ("un kilo").
-- Dos dígitos sueltos seguidos ("uno ocho") son un decimal: así dicta el operador los diferenciales.
-"""
-
 from __future__ import annotations
 
 import re
@@ -31,7 +17,7 @@ CENTENAS = {"cien": 100, "ciento": 100, "doscientos": 200, "trescientos": 300, "
 SEPARADOR_DECIMAL = {"coma", "con", "punto"}
 UNIDADES_FISICAS = {"grado", "grados", "kilo", "kilos", "kilogramo", "kilogramos", "metro", "metros", "bar",
                     "bares", "psi", "libra", "libras", "gota", "gotas"}
-# "la dos", "bomba tres": se quedan en palabras. "a uno" y "las dos" son "la uno" y "la dos" mal transcriptos.
+# palabra anterior al número en un nombre de equipo: "la dos", "bomba tres"
 NOMBRE_DE_EQUIPO = {"la", "bomba", "las", "a"}
 _TOKEN = re.compile(r"\d+(?:[.,]\d+)*|[^\W\d_]+|\s+|.", re.UNICODE)
 
@@ -74,7 +60,7 @@ class _Lector:
         return j if j < len(self.tokens) else None
 
     def _entero(self, desde: int) -> tuple[int, int, int] | None:
-        """Lee un entero en palabras desde `desde`. Devuelve (valor, índice siguiente, cantidad de palabras)."""
+        """Entero en palabras desde `desde`: (valor, índice siguiente, cantidad de palabras)."""
         total, actual, palabras, j, ultimo = 0, 0, 0, desde, None
         while True:
             k = self._siguiente_palabra(j) if palabras else j
@@ -142,7 +128,7 @@ class _Lector:
         return "".join(salida)
 
     def _mezcla_con_digitos(self, valor: int, fin: int) -> tuple[int, int]:
-        """La transcripción a veces mezcla: "mil seiscientos 20" es 1620, no 1600 y 20."""
+        """Palabras seguidas de dígitos: "mil seiscientos 20" → 1620."""
         k = self._siguiente_palabra(fin)
         if k is None or not self.tokens[k].isdigit():
             return valor, fin
@@ -196,8 +182,7 @@ class _Lector:
         return valor, fin
 
 
-# El diferencial de un filtro siempre es un decimal chico ("uno ocho" = 1.8). La transcripción suele partirlo en dos
-# números: "uno, dos", "1 o 2", "1-3", "unos 5", "09". Delante de "de diferencial" se vuelven a juntar.
+# delante de "de diferencial": "1, 2", "1 o 2", "1-3", "1 3", "unos 5", "09" → 1.2, 1.2, 1.3, 1.3, 1.5, 0.9
 _DIFERENCIAL = r"(?=\s+de\s+diferencial)"
 _ARREGLOS_DIFERENCIAL = [
     (re.compile(r"\b(\d)\s*(?:,|-|\bo\b)\s*(\d)\b" + _DIFERENCIAL), r"\1.\2"),
@@ -219,5 +204,4 @@ def normalizar_numeros(texto: str) -> str:
 
 
 def extraer_numeros(texto: str) -> list[float]:
-    """Los números del texto, en orden, después de normalizarlos."""
     return [_digitos(n) for n in re.findall(r"\d+(?:\.\d+)?", normalizar_numeros(texto))]

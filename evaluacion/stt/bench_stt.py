@@ -1,14 +1,8 @@
 """Compara modelos de transcripción sobre las notas de voz de la planta.
 
-Usa el banco de voces de la planta (`datos/voces/`: 102 notas con su texto) y les mezcla el mismo ruido de planta que
-agrega el simulador (`planta_sim.audio.ruido_planta`, intensidad 0,45–0,7 como en `nota_a_wav`). Corre un modelo por
-invocación, así la memoria pico es solo la de ese modelo.
-
     python bench_stt.py --modelo whisper:small --voces /voces --salida /resultados/whisper-small.json
 
 Modelos: `whisper:<tamaño>` (faster-whisper, int8) y `parakeet` (Parakeet TDT 0.6B v3 con onnx-asr).
-Métricas: WER sobre texto normalizado (números en dígitos), notas con todos los números bien, recall de números,
-latencia por nota (p50/p95), factor de tiempo real y memoria pico.
 """
 
 from __future__ import annotations

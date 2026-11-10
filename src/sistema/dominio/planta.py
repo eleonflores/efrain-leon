@@ -1,8 +1,4 @@
-"""Catálogo de la planta: equipos, nombres informales, unidades de los manómetros y límites de alarma.
-
-Sale de `GET /api/planta` (el mismo `planta.yaml` de la hoja de datos). Los límites son los de la hoja de datos,
-nunca los del manual Rev. C. Todo acá es determinístico: con los mismos datos, la misma respuesta.
-"""
+"""Catálogo de la planta: equipos, nombres informales, unidades de los manómetros y límites de alarma."""
 
 from __future__ import annotations
 
@@ -13,7 +9,7 @@ from sistema.procesamiento.numeros import sin_tildes
 
 # Conversión a kg/cm² (1 kg/cm² = 14,2233 psi = 0,980665 bar).
 A_KG = {"kg/cm2": 1.0, "psi": 1 / 14.2233, "bar": 1 / 0.980665}
-# Lectura local del operador → sensor conectado con el que se compara (mismo mapeo que usa el corrector).
+# lectura local del operador → sensor conectado con el que se compara
 SENSOR_DE_LECTURA = {"presion_descarga_local": "presion_descarga", "presion_diferencial": "presion_diferencial",
                      "presion_diferencial_local": "presion_diferencial"}
 UNIDAD_POR_VARIABLE = {"presion_diferencial": "kg/cm2", "presion_diferencial_local": "kg/cm2", "nivel": "m",

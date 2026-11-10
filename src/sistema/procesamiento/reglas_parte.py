@@ -1,13 +1,4 @@
-"""Extracción del parte por reglas: el camino rápido para el dictado típico del operador.
-
-El operador dicta con frases regulares ("la dos está en 1640 psi de descarga", "el filtro B me dio 1.8 de
-diferencial", "en la uno, el rodamiento me dio 52 grados con la pistola"). Medido en la PC de trabajo, el LLM local
-tarda 40 a 80 s por nota en 2 CPU (`evaluacion/llm/`), y en la corrección la planta no espera tanto: estas reglas
-resuelven el caso típico en milisegundos y devuelven el mismo `Dictado` que el LLM, validado con el mismo esquema.
-
-Si las reglas no explican todos los números de la nota (habla libre, una nota en vivo, una frase que no conocen),
-`extraer` devuelve None y la nota va al LLM.
-"""
+"""Extracción del parte por reglas para el dictado típico; devuelve el mismo `Dictado` que el LLM."""
 
 from __future__ import annotations
 
@@ -24,11 +15,9 @@ _UNIDAD_RE = "|".join(sorted(UNIDAD, key=len, reverse=True))
 
 # (variable, patrón, observación fija). El primer grupo numérico es el valor.
 LECTURAS = [
-    # Sin exigir el "está en": la transcripción a veces lo pierde ("la bomba Steinwil 600 psi de descarga").
     ("presion_descarga_local", re.compile(rf"{NUM}(?: (?P<u>{_UNIDAD_RE}))? de descarga"), None),
     ("presion_diferencial", re.compile(rf"{NUM}(?: de)? (?:de )?diferencial"), None),
     ("nivel", re.compile(rf"(?:esta en|marca) {NUM} metros?"), None),
-    # La transcripción puede partir "el rodamiento, me dio 59 grados" en dos cláusulas: alcanza con "me dio N grados".
     ("temperatura_rodamiento_ir", re.compile(rf"(?<!motor )(?:rodamiento,? )?(?:me dio|medio|marca|esta en) {NUM} grados"), None),
     ("temperatura_motor_ir", re.compile(rf"motor (?:me dio|medio|marca|esta en) {NUM} grados"), None),
 ]
@@ -47,17 +36,15 @@ OBSERVACIONES = [
 ]
 REBALSE = re.compile(r"rebalsando|rebalsa")
 FOTO = re.compile(r"(?:le )?saque (?:una )?fotos?")
-# "la bomba" / "el filtro" sin decir cuál; también sin el artículo, que la transcripción a veces se come
-# ("También la bomba está…" salió "Ambienta bomba está…").
+# "la bomba" / "el filtro" sin decir cuál, con o sin artículo
 GENERICOS = re.compile(r"\b(?:la )?(bomba)\b(?! (?:uno|dos|tres)\b)|\b(?:el )?(filtro)\b(?! (?:a|b)\b)")
 _NOMBRE_GENERICO = {"bomba": "la bomba", "filtro": "el filtro"}
 SIN_NOVEDAD = re.compile(r"sin novedad|todo normal|todo en orden")
 CONECTORES = re.compile(r"\b(ah,? y|tambien|despues|ademas)\b")
 
 
-# Errores típicos de la transcripción en el nombre de la bomba: "a uno estar en…", "las dos está en…".
+# "a uno estar en…", "las dos está en…" → "la uno …", "la dos …"
 _NOMBRE_MAL_TRANSCRIPTO = re.compile(r"(^|[.,;] ?)(?:a|ah|las|el) (uno|dos|tres)\b")
-# Si una lectura llega sin equipo, se le asigna el genérico del tipo: queda ambigua y el sistema pregunta.
 GENERICO_POR_VARIABLE = {"presion_descarga_local": "la bomba", "temperatura_rodamiento_ir": "la bomba",
                          "temperatura_motor_ir": "la bomba", "presion_diferencial": "el filtro", "nivel": "el pulmon"}
 
@@ -86,7 +73,6 @@ def _equipo_en(clausula: str, planta: Planta, ultimo: bool = False) -> str | Non
 
 
 def _unidad_contradice(equipo: str, variable: str, unidad: str | None, planta: Planta) -> bool:
-    """True si la unidad dicha no es la del manómetro de esa bomba (B-101 kilos, B-102 psi, B-103 bar)."""
     if variable != "presion_descarga_local" or unidad is None:
         return False
     tag = planta.resolver(equipo)
@@ -100,8 +86,7 @@ def extraer(texto: str, planta: Planta) -> Dictado | None:
 
 
 def extraer_con_cobertura(texto: str, planta: Planta) -> tuple[Dictado | None, bool]:
-    """Lo que las reglas pudieron leer y si explicaron todos los números de la nota. Lo parcial sirve de respaldo si
-    el LLM no llega a tiempo: mejor un borrador incompleto que el operador corrige que ninguno."""
+    """(lo que las reglas pudieron leer, si explicaron todos los números de la nota)."""
     t = CONECTORES.sub(" ", _norm(texto))
     # Corta en fin de oración (no en el punto decimal) y en comas, salvo "parada, en reserva" o "disparada, no arranca".
     clausulas = [c.strip(" ,") for c in re.split(r"\.(?!\d)|;|,(?! ?(?:no|que|en reserva)\b)", t) if c.strip(" ,")]
@@ -118,15 +103,13 @@ def extraer_con_cobertura(texto: str, planta: Planta) -> tuple[Dictado | None, b
         lecturas: list[tuple[int, FilaDictada]] = []
         for variable, patron, _ in LECTURAS:
             for m in patron.finditer(c):
-                # El equipo de una lectura es el último nombrado antes de ella ("el pulmón está en 5 metros y el
-                # filtro A me dio 1.4": el 1.4 es del filtro A, no del pulmón).
                 en_la_clausula = _equipo_en(c[:m.start()], planta, ultimo=True)
                 equipo_fila = en_la_clausula or equipo_previo or GENERICO_POR_VARIABLE.get(variable)
                 if equipo_fila is None:
                     continue
                 unidad = UNIDAD.get(m.groupdict().get("u") or "")
                 if not en_la_clausula and _unidad_contradice(equipo_fila, variable, unidad, planta):
-                    equipo_fila = "la bomba"     # el operador dice la unidad de su manómetro: no es esa bomba
+                    equipo_fila = "la bomba"
                 if variable == "nivel":
                     unidad = "m"
                 elif variable.startswith("temperatura"):
@@ -151,5 +134,4 @@ def extraer_con_cobertura(texto: str, planta: Planta) -> tuple[Dictado | None, b
         return Dictado(filas=[]), True
     if not filas:
         return None, False
-    # Si hay números que las reglas no explican, que decida el LLM (con lo de las reglas como respaldo).
     return Dictado(filas=filas), len(numeros) == numeros_usados

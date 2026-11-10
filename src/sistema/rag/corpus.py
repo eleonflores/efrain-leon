@@ -1,31 +1,4 @@
-"""Corpus documental de PIA-3: fragmentos de Novit con los metadatos que el RAG necesita para filtrar y citar.
-
-Se usan las secciones de Novit como fragmentos (una línea de `fragmentos.jsonl` por sección y por orden de trabajo):
-ya respetan la estructura del manual, son cortas (mediana de 236 caracteres, la más larga 2.709) y cada una trae su
-cita (`TX350-D §3.2`, `historial OT-25-0026`), que es lo que la suite de retrieval espera y lo que el sistema tiene
-que poner en cada conclusión. Partirlas más no hace falta: ninguna pasa los 512 tokens del modelo de embeddings.
-
-Lo que este módulo agrega es la metadata para el filtro previo (antes del top-k, nunca después):
-
-- **vigente**: la Rev. C del manual de la bomba está reemplazada (`indice.json` y `fragmentos.jsonl` la marcan).
-- **aplica_pia3**: secciones que existen en los manuales pero no valen para esta planta. Se deciden por la `clave`
-  de la sección o de su capítulo (las asigna el generador del corpus y son estables): la familia de modelos
-  (TX-250, TX-500, FC-24, FC-96), los límites de otros modelos o de otras plantas, los capítulos de PIA-1 y PIA-2,
-  instalación, preservación, transporte y opcionales que PIA-3 no tiene. El texto de cada una lo dice ("Solo como
-  referencia. No aplican a PIA-3", "No aplica a un filtro en servicio"); la regla queda escrita acá para que sea
-  auditable y no dependa de que el modelo lea la advertencia.
-- **equipos**: los del documento (`indice.json`) o, en una orden, el equipo de la orden.
-- **fabricante**: el emisor del documento (Trimax, Filtrapat, la operadora, Servipat vía contrato).
-
-Los precios del contrato anterior (`CT-SVP-2025 §2.5`) quedan como aplicables a propósito: valen para certificar
-trabajos de 2024, y para eso la suite los pide.
-
-**Órdenes del historial.** El texto libre de campo tiene abreviaturas (`cbio`, `dif`, `empaq`, `c/`, `x`), equipos
-dichos de varias formas (`B2`, `la del fondo`, `fa`) y códigos de tarea sin nombre (`T-B-ACE`). Para buscar (no para
-mostrar) se arma `texto_busqueda`: la cabecera en palabras (equipo con su nombre de campo, tarea con su nombre del
-MBP-4 §13) y las abreviaturas de la planilla (MBP-4 §4.4) y de campo expandidas. Los errores de tipeo quedan: el
-embedding los tolera bastante y corregirlos a mano sería adivinar.
-"""
+"""Corpus documental de PIA-3: fragmentos con los metadatos que el RAG necesita para filtrar y citar."""
 
 from __future__ import annotations
 
@@ -40,7 +13,7 @@ from pathlib import Path
 RAIZ_REPO = Path(__file__).resolve().parents[3]
 RUTAS_POR_DEFECTO = (RAIZ_REPO / "datos" / "documentos", Path("/app/datos/documentos"))
 
-# Claves (de la sección o de su capítulo) cuyo contenido no aplica a PIA-3, con el motivo que ve quien filtra.
+# Clave de la sección o de su capítulo → motivo por el que no aplica a PIA-3.
 NO_APLICA_POR_CLAVE = {
     "familia": "compara los modelos de la familia (TX-250, TX-500, FC-24, FC-96); los datos de PIA-3 están en las "
                "especificaciones del modelo",
@@ -131,11 +104,7 @@ class FragmentoCorpus:
         return texto_busqueda_orden(self.texto) if self.tipo_documento == TIPO_HISTORIAL else self.texto
 
     def texto_para_embeber(self) -> str:
-        """El texto del fragmento con una línea que lo sitúa (chunking contextual): de qué documento y revisión es.
-
-        Así "3.2 Límites de operación" se entiende solo: el embedding sabe que es de la bomba TX-350 y no del filtro.
-        Las órdenes ya traen su cabecera (número, fecha, equipo, tarea).
-        """
+        """El texto con una línea que dice de qué documento y revisión es (chunking contextual)."""
         if self.tipo_documento == TIPO_HISTORIAL:
             return f"Historial de PIA-3. {self.texto_busqueda}"
         rev = f", revisión {self.revision}" if self.revision else ""

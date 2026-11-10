@@ -1,16 +1,4 @@
-"""La sexta consulta de solo lectura: búsqueda en los manuales y el historial de PIA-3 (RAG).
-
-Envuelve `sistema.rag.BuscadorManuales` con el mismo contrato que las otras cinco: recibe la entrada ya validada por
-Pydantic, hace la validación semántica (el equipo existe) y lanza `FalloConsulta` cuando algo no cierra, para que el
-registro lo convierta en un `ErrorHerramienta`.
-
-Qué va por acá y qué no (ver `docs/rag.md`): manuales, catálogo de fallas, procedimientos, contrato y el texto libre
-de las órdenes sí; límites de alarma, valores medidos y stock no. Esos tienen una fuente de verdad estructurada
-(`/api/planta`, el historiador, materiales) y un número que sale del RAG puede ser el de un documento viejo. La tool
-lo recuerda en `observacion` cuando la pregunta suena a límite o a stock.
-
-El filtro de vigencia y de aplicabilidad lo pone el sistema, nunca el modelo: no hay argumento para pedir la Rev. C.
-"""
+"""Búsqueda en los manuales y el historial de PIA-3 (RAG)."""
 
 from __future__ import annotations
 
@@ -34,8 +22,6 @@ SIN_RESULTADOS = ("No hay fragmentos con esos filtros. Probá sin 'documento' o 
 
 
 class Buscador(Protocol):
-    """Lo que la tool necesita del RAG (en los tests, un doble sin Postgres ni modelo)."""
-
     @property
     def modo(self) -> str: ...
 
@@ -43,7 +29,7 @@ class Buscador(Protocol):
 
 
 def resolver_equipo(dicho: str) -> str:
-    """TAG exacto o nombre de campo ('la dos', 'el filtro B') → TAG. Los nombres son los del MBP-4 §2.2."""
+    """TAG exacto o nombre de campo ('la dos', 'el filtro B') → TAG."""
     clave = re.sub(r"[\s_-]", "", dicho.upper())
     tag = next((t for t in ALIAS_EQUIPOS if t.replace("-", "") == clave), None)
     if tag is None:

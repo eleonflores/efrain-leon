@@ -1,9 +1,5 @@
 """Corre un escenario de la planta sin el sistema y guarda la verdad de campo y los audios de las notas.
 
-Sirve para armar el conjunto de evaluación con lo mismo que va a recibir el sistema en la corrección: las notas con su
-ruido de planta y su parte esperado (`/api/verdad`, abierta fuera del modo corrección). Usa el mismo reloj por eventos
-que el corrector (`correccion/rubrica.yaml`).
-
     python evaluacion/capturar_escenario.py martes-tranquilo --salida .local/capturas
     python evaluacion/capturar_escenario.py libre --horas 72 --salida .local/capturas
 """

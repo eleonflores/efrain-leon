@@ -1,15 +1,4 @@
-"""El sistema de la PC de planta: escucha la planta, arma los partes por voz, detecta y alerta.
-
-Recorrido de una nota (ver `docs/spec-parte-por-voz.md`):
-
-    planta/recorridas → audio → transcripción local → ¿condición insegura? → alerta en < 30 s
-                                                    → extracción (LLM + reglas) → tablet ⇄ operador
-                                                    → parte Confirmado → eventos (SinNovedad / Escalado)
-                                                    → lo escalado, a la cola hacia la nube
-
-La recepción de mensajes no espera al procesamiento: cada nota corre en su propia tarea, con un timeout global, y la
-CPU se reparte con semáforos (una transcripción y un llamado al LLM por vez).
-"""
+"""Sistema de la PC de planta: escucha la planta, arma los partes por voz, detecta y alerta."""
 
 from __future__ import annotations
 
@@ -79,15 +68,12 @@ class Sistema:
         self._rangos: dict[tuple[str, str], tuple[float, float, datetime] | None] = {}
         self._tareas: set[asyncio.Task] = set()
 
-    # ------------------------------------------------------------------ arranque
-
     async def correr(self) -> None:
         tareas = [self.bus.correr(self.recibir, ["planta/#"]), self.latido(), self.enlace.correr(), self.preparar(),
                   self.sincronizar_nube()]
         await asyncio.gather(*tareas)
 
     async def preparar(self) -> None:
-        """Lo lento va después del primer latido: el corrector espera el latido para soltar el reloj."""
         await self.db.conectar()
         self.db_lista = True
         self._lanzar(self._indice_rag())
@@ -104,15 +90,14 @@ class Sistema:
             log.warning("No se pudo cargar el LLM %s (%s): la extracción sigue por reglas", self.llm.nombre, e)
 
     async def _indice_rag(self) -> None:
-        """Deja cargado el índice de manuales en pgvector (vectores precalculados en la imagen: tarda segundos)."""
         from sistema.rag.indice import asegurar_indice
         try:
             log.info("Índice RAG: %s", await asegurar_indice(self.cfg.database_url))
-        except Exception:  # noqa: BLE001  el RAG no es parte del camino crítico de la Entrega 1
+        except Exception:  # noqa: BLE001
             log.exception("No se pudo cargar el índice RAG")
 
     async def _definicion(self) -> dict:
-        while True:                      # la planta puede tardar en arrancar: se espera sin límite
+        while True:
             try:
                 return await self.api.definicion()
             except ErrorPlanta as e:
@@ -126,8 +111,6 @@ class Sistema:
         tarea = asyncio.create_task(coro)
         self._tareas.add(tarea)
         tarea.add_done_callback(self._tareas.discard)
-
-    # ------------------------------------------------------------------ mensajes de la planta
 
     async def recibir(self, topico: str, datos: dict) -> None:
         if topico.startswith("planta/sensores/"):
@@ -155,8 +138,6 @@ class Sistema:
             evento_id = f"EV-SEN-{l.tag}-{l.variable}-{desde:%Y%m%dT%H%M}"
             self._lanzar(self.publicar_evento(evento_id, decision, "sensor", [], None, l.ts))
 
-    # ------------------------------------------------------------------ una nota
-
     async def procesar_nota(self, nota: dict) -> None:
         estado = EstadoNota(nota, presupuesto=Presupuesto(self.cfg.max_pasos_llm_por_nota, self.cfg.max_tokens_por_nota))
         self.notas[estado.id] = estado
@@ -180,7 +161,7 @@ class Sistema:
         except PresupuestoAgotado as e:
             log.error("Nota %s: presupuesto agotado (%s)", estado.id, e)
             await self._abandonar(estado, f"presupuesto agotado: {e}")
-        except Exception:  # noqa: BLE001  una nota rota no tumba el sistema
+        except Exception:  # noqa: BLE001
             log.exception("Nota %s: error", estado.id)
             await self._abandonar(estado, "error")
 
@@ -201,7 +182,6 @@ class Sistema:
         return texto
 
     async def extraer(self, estado: EstadoNota) -> None:
-        """Primero las reglas (milisegundos, el dictado típico); si no explican la nota, el LLM local."""
         texto = preparar_texto(estado.transcripcion)
         t0 = time.perf_counter()
         dictado, completo = reglas_parte.extraer_con_cobertura(texto, self.planta)
@@ -222,8 +202,6 @@ class Sistema:
         estado.filas = armar_borrador(dictado, self.planta, estado.nota.get("fotos", [])) if dictado else []
         await self.marcar_fuera_de_rango(estado.filas)
 
-    # ------------------------------------------------------------------ rango histórico
-
     async def marcar_fuera_de_rango(self, filas: list[FilaBorrador]) -> None:
         for f in filas:
             sensor = SENSOR_DE_LECTURA.get(f.variable)
@@ -239,7 +217,7 @@ class Sistema:
                                     f"fuera del rango de los últimos 45 días ({bajo:.2f} a {alto:.2f} kg/cm²)")
 
     async def rango_historico(self, tag: str, sensor: str) -> tuple[float, float, datetime] | None:
-        """Percentiles 1 y 99 del historiador (45 días) con un 3 % de margen; se recalcula cada 6 h de planta."""
+        """(bajo, alto, calculado_en) del rango normal del sensor; None si no hay historial suficiente."""
         clave = (tag, sensor)
         guardado = self._rangos.get(clave)
         if guardado and self.ahora() - guardado[2] < timedelta(hours=6):
@@ -248,7 +226,6 @@ class Sistema:
             serie = await self.api.historian(tag, sensor)
         except ErrorPlanta:
             return guardado
-        # Con la bomba parada la descarga marca ~1,6 kg/cm²: esas muestras no son del rango de operación.
         minimo = BOMBA_PARADA_KG if sensor == "presion_descarga" else float("-inf")
         valores = sorted(m["valor"] for m in serie if m.get("valor") is not None and m["valor"] > minimo)
         if len(valores) < 60:
@@ -258,10 +235,8 @@ class Sistema:
         self._rangos[clave] = (bajo * 0.97, alto * 1.03, self.ahora())
         return self._rangos[clave]
 
-    # ------------------------------------------------------------------ tablet
-
     async def avanzar(self, estado: EstadoNota) -> None:
-        """Manda lo que corresponda: una pregunta por el próximo equipo ambiguo o el borrador."""
+        """Manda a la tablet el próximo paso: pregunta por un equipo ambiguo, aviso informativo o borrador."""
         ambigua = next((f for f in estado.filas if f.tag is None and f.candidatos), None)
         if ambigua is not None:
             estado.fase, estado.preguntas = "pregunta", estado.preguntas + 1
@@ -269,8 +244,6 @@ class Sistema:
             await self.tablet(estado, f"TAB-{estado.id}-P{estado.preguntas}", texto, opciones=opciones,
                               titulo="Pregunta")
         elif not any(f.valor is not None for f in estado.filas):
-            # Solo estados u observaciones ("la tres está parada, en reserva"): el operador compara valores, así que
-            # no hay nada que confirmar. Se le informa sin pedir respuesta y el parte queda confirmado.
             await self.tablet(estado, f"TAB-{estado.id}-I", dialogo.texto_borrador(estado.filas, self.planta)
                               .replace(" ¿Lo confirmás?", " Lo registro así."),
                               filas=[f.a_fila_parte() for f in estado.filas if f.tag],
@@ -324,8 +297,6 @@ class Sistema:
             return await self._abandonar(estado, f"sin confirmación después de {estado.intento} borradores")
         await self.avanzar(estado)
 
-    # ------------------------------------------------------------------ resultados
-
     async def confirmar(self, estado: EstadoNota) -> None:
         estado.fase = "confirmada"
         filas = [f.a_fila_parte() for f in estado.filas if f.tag]
@@ -355,7 +326,6 @@ class Sistema:
         log.info("Evento %s %s %s: %s", evento_id, d.tipo, d.tag or "", resumen)
 
     async def tendencia(self, tag: str | None, ts: datetime, horas: int = 6) -> dict:
-        """Resumen de los sensores del equipo en las últimas horas (contexto del escalado)."""
         if not tag or tag not in self.planta.equipos:
             return {}
         salida = {}
@@ -376,7 +346,6 @@ class Sistema:
         tag = equipos[0] if equipos else None
         codigos = ", ".join(c.codigo for c in condiciones)
         texto = seguridad.mensaje_emergencia(condiciones, dialogo.nombre_de(self.planta, tag) if tag else None)
-        # Primero la alerta (es la que no puede faltar), enseguida el aviso al operador; lo demás, después.
         evento = EventoSistema(id=f"EV-{estado.id}-SEG", ts=datetime.fromisoformat(estado.nota["ts"]),
                                tipo="AlertaSeguridad", equipo=tag, origen="parte", parte_id=estado.id,
                                nota_ids=[estado.id], resumen=f"{codigos}: " + "; ".join(c.descripcion for c in condiciones))
@@ -392,7 +361,6 @@ class Sistema:
         await self.db.actualizar_nota(estado.id, fase="alerta", seguridad=[vars(c) for c in condiciones])
 
     async def sin_contenido(self, estado: EstadoNota) -> None:
-        """Una nota sin lecturas (p. ej. "recorrida sin novedad"): se avisa y queda un SinNovedad general."""
         estado.fase = "confirmada"
         await self.tablet(estado, f"TAB-{estado.id}-OK", "No encontré lecturas para cargar en esta nota; la registré "
                           "como recorrida sin novedad.", espera=False,
@@ -411,7 +379,7 @@ class Sistema:
             await self.db.actualizar_nota(estado.id, fase="abandonada")
 
     async def restaurar(self) -> None:
-        """Después de un reinicio: retoma los diálogos abiertos mandando de nuevo el último paso."""
+        """Retoma las notas que quedaron abiertas en la base."""
         for n in await self.db.notas_abiertas():
             nota = {"id": n["id"], "ts": n["ts"].isoformat() if n["ts"] else None, "fotos": n["fotos"],
                     "audio_url": n["audio_url"], "recorrida_id": n["recorrida_id"], "operador": n["operador"]}
@@ -424,8 +392,6 @@ class Sistema:
             self.notas[estado.id] = estado
             log.info("Retomo la nota %s (%s)", estado.id, n["fase"])
             await self.avanzar(estado)
-
-    # ------------------------------------------------------------------ latido y nube
 
     async def latido(self) -> None:
         vuelta = 0
@@ -444,14 +410,12 @@ class Sistema:
             vuelta += 1
             try:
                 await asyncio.wait_for(self.latir_ya.wait(), self.cfg.latido_s)
-                await asyncio.sleep(0.5)        # que termine de escribirse lo que lo disparó
+                await asyncio.sleep(0.5)
             except TimeoutError:
                 pass
             self.latir_ya.clear()
 
     async def publicar_consumo(self) -> None:
-        """Tokens acumulados por modelo en `sistema/metricas` (telemetría opcional que muestra el visor). Respeta el
-        validador de la planta: totales = suma del desglose, un modelo por fila, fecha con zona horaria."""
         modelos = [m for m in await self.db.consumo_por_modelo() if (m["entrada"] or 0) + (m["salida"] or 0) > 0]
         if not modelos:
             return
@@ -468,7 +432,6 @@ class Sistema:
             "modelos": filas})
 
     async def sincronizar_nube(self) -> None:
-        """Vacía la cola hacia la nube en orden cuando hay enlace. Sin enlace, todo espera en Postgres."""
         while True:
             await asyncio.sleep(5)
             if not (self.db_lista and self.enlace.ok):

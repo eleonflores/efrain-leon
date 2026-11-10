@@ -1,8 +1,4 @@
-"""Estado del enlace de la planta con la nube.
-
-La única salida de la planta es el proxy `enlace:3128`; cuando el enlace se cae, el proxy cierra la conexión sin
-responder. El estado se sondea pidiendo `/salud` al servicio de la nube a través del proxy.
-"""
+"""Estado del enlace de la planta con la nube."""
 
 from __future__ import annotations
 

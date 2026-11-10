@@ -1,18 +1,4 @@
-"""Preparación de la consulta: códigos, equipos y expansión con el catálogo de fallas del MBP-4 §6.
-
-Los embeddings representan mal los identificadores exactos (`TX-T07`, `OT-25-0026`, `350-EMP-03`) y el stemming
-`spanish` de Postgres los parte en pedazos (`OT-25-0026` → `ot`, `-25`, `-0026`; `B-101` → `b`, `-101`). Por eso los
-códigos se extraen aparte, con la misma función para los fragmentos (al indexar) y para la pregunta, y alimentan una
-tercera lista de la búsqueda híbrida que solo mira coincidencias exactas de código.
-
-Dos expansiones, las dos medidas en `evaluacion/rag/`:
-
-- **Fallas**: los fabricantes usan sus códigos (`TX-T07`, `FC-T02`) y la planta usa F01–F10. La correspondencia es la
-  tabla del MBP-4 §6.1; si la pregunta trae uno, se agrega el otro, así "¿qué es la TX-T07?" encuentra también la
-  ficha F09 de la operadora y una pregunta por F09 encuentra la sección del fabricante.
-- **Equipos**: en campo se dice "la dos", "B2", "la del fondo" (MBP-4 §2.2 y §4.4). Se agrega el TAG y las
-  abreviaturas que se usan en las órdenes, para que el texto libre del historial ("B2 cavita") coincida.
-"""
+"""Preparación de la consulta: códigos, equipos y expansión con el catálogo de fallas del MBP-4 §6."""
 
 from __future__ import annotations
 
@@ -20,14 +6,14 @@ import re
 import unicodedata
 from dataclasses import dataclass
 
-# MBP-4 §6.1 (resumen del catálogo): código de la planta → códigos del fabricante (TX = Trimax, FC = Filtrapat).
+# MBP-4 §6.1: código de la planta → códigos del fabricante.
 FALLAS_FABRICANTE: dict[str, tuple[str, ...]] = {
     "F01": ("TX-T01",), "F02": ("TX-T02",), "F03": ("TX-T03",), "F04": ("TX-T04",), "F05": ("TX-T05",),
     "F06": ("TX-T06",), "F07": ("FC-T01",), "F08": ("FC-T02",), "F09": ("TX-T07",), "F10": ("TX-T08", "FC-T04"),
 }
 FALLA_PLANTA: dict[str, str] = {fab: f for f, fabs in FALLAS_FABRICANTE.items() for fab in fabs}
 
-# MBP-4 §2.2 (nombres de campo) y §4.4 (abreviaturas de la planilla): TAG → cómo aparece en el texto libre.
+# MBP-4 §2.2 y §4.4: TAG → cómo aparece en el texto libre.
 ALIAS_EQUIPOS: dict[str, tuple[str, ...]] = {
     "B-101": ("la uno", "la 1", "la de la punta", "la del portón", "bomba uno", "bomba 1", "b1", "bba 1", "b-101",
               "b101"),
@@ -39,22 +25,19 @@ ALIAS_EQUIPOS: dict[str, tuple[str, ...]] = {
     "TK-301": ("el pulmón", "el tanque", "tanque pulmón", "tk-301"),
     "FT-401": ("el caudalímetro", "caudalímetro", "el colector", "ft-401"),
 }
-# Lo que se agrega a la consulta léxica cuando se nombra un equipo: TAG y abreviaturas de las órdenes.
+# Lo que se agrega a la consulta léxica cuando se nombra un equipo.
 EXPANSION_EQUIPOS: dict[str, str] = {
     "B-101": "B-101 B1 bomba 1", "B-102": "B-102 B2 bomba 2", "B-103": "B-103 B3 bomba 3",
     "F-201A": "F-201A FA primario", "F-201B": "F-201B FB secundario", "TK-301": "TK-301 tanque",
     "FT-401": "FT-401 caudalímetro",
 }
 
-# Nombres que tienen forma de código pero no identifican una falla, un repuesto ni una orden: aparecen en decenas de
-# fragmentos y en la lista de códigos solo meterían ruido. Los equipos van por la expansión léxica.
 NOMBRES_NO_CODIGO = frozenset({
     "B-101", "B-102", "B-103", "F-201A", "F-201B", "TK-301", "FT-401", "B1", "B2", "B3",
     "PIA-1", "PIA-2", "PIA-3", "TX-250", "TX-350", "TX-500", "FC-24", "FC-48", "FC-96",
 })
 
-# Un código es una palabra con guion, letras y algún dígito (TX-T07, OT-25-0026, B-101, 350-EMP-03; no una fecha), una
-# palabra en mayúsculas con guion (T-B-EMP, TX-VAL-KIT) o un código corto de letra y número (F03, S1, P2).
+# Con guion, letras y algún dígito (TX-T07, 350-EMP-03), mayúsculas con guion (T-B-EMP) o corto (F03, S1).
 _CON_GUION_Y_DIGITO = re.compile(r"(?<![\w-])(?=[\w-]*\d)(?=[\w-]*[A-Za-z])[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+(?![\w-])")
 _MAYUSCULAS_CON_GUION = re.compile(r"(?<![\w-])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+(?![\w-])")
 _CORTO = re.compile(r"(?<![\w-])(?:[Ff]\d{2}|[A-Z]{1,2}\d{1,2})(?![\w-])")

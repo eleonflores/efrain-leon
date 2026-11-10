@@ -1,23 +1,4 @@
-"""Esquema del RAG en PostgreSQL 16 + pgvector y su carga al arrancar.
-
-Una sola tabla, `rag_fragmentos`: el texto de cada sección u orden, su vector, un `tsvector` en español generado por
-Postgres y los metadatos para filtrar y citar (documento, revisión, fabricante, equipos, sección, título, cita,
-página, vigente, si aplica a PIA-3). Vectores, texto y metadatos en la misma base: el filtro de vigencia y
-aplicabilidad es un `WHERE` dentro de cada búsqueda, antes del top-k.
-
-`rag_lexemas` guarda en cuántos fragmentos aparece cada lexema (`ts_stat`): con eso la lista léxica puntúa con BM25
-en SQL (ver `busqueda.py`). `ts_rank` no tiene IDF y en este corpus "bomba" pesaría lo mismo que "cavitación".
-
-**Carga.** El corrector borra los volúmenes entre escenarios, así que cada arranque puede encontrar la base vacía.
-`asegurar_indice()` es idempotente: si `rag_meta` dice que lo cargado corresponde a este corpus y a este modelo, no
-hace nada; si no, en una transacción con lock (el sistema y el servidor MCP pueden arrancar a la vez) recrea las
-tablas, copia los fragmentos con los vectores precalculados en la imagen (`COPY`, 701 filas), calcula las
-estadísticas léxicas y recién después crea los índices HNSW (coseno) y GIN (texto, códigos, equipos), como pide
-pgvector. Tarda menos de un segundo.
-
-Si faltan los vectores precalculados (o son de otro corpus) los calcula en el momento si el modelo está disponible;
-si tampoco está el modelo, carga sin vectores y la búsqueda queda solo léxica (y lo dice).
-"""
+"""Esquema del RAG en PostgreSQL 16 + pgvector y su carga al arrancar."""
 
 from __future__ import annotations
 
@@ -44,8 +25,7 @@ COLUMNAS = ("cita", "documento", "revision", "tipo_documento", "titulo_documento
             "texto", "texto_busqueda", "embedding")
 
 
-# Español de Postgres sin tildes: el historial está escrito sin tildes ("cigueñal", "valvulas", "succion") y la
-# configuración `spanish` sola no une "cigüeñal" con "ciguenal".
+# Configuración `spanish` que además ignora las tildes.
 CONFIG_SQL = f"""
 CREATE EXTENSION IF NOT EXISTS unaccent;
 DO $$ BEGIN
@@ -171,10 +151,7 @@ async def _cargar(cur: psycopg.AsyncCursor, corpus: Corpus, vectores: dict[str, 
 async def asegurar_indice(conexion: psycopg.AsyncConnection | str, *, modelo: ModeloEmbeddings | None = None,
                           corpus: Corpus | None = None, forzar: bool = False,
                           embedder: Embedder | None = None) -> EstadoIndice:
-    """Deja `rag_fragmentos` cargado con este corpus y este modelo. Idempotente; seguro con varios procesos.
-
-    Recibe una conexión abierta (la del sistema, `autocommit=True`) o una URL de Postgres.
-    """
+    """Deja `rag_fragmentos` cargado con este corpus y este modelo. Idempotente; seguro con varios procesos."""
     if isinstance(conexion, str):
         async with await psycopg.AsyncConnection.connect(conexion, autocommit=True) as con:
             return await asegurar_indice(con, modelo=modelo, corpus=corpus, forzar=forzar, embedder=embedder)

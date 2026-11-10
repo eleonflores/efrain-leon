@@ -1,11 +1,5 @@
 """Compara LLM locales en la extracción del parte, con el mismo criterio que usa el operador virtual.
 
-Para cada nota capturada (`evaluacion/capturar_escenario.py`) arma el borrador con el pipeline real
-(`numeros` → LLM con salida estructurada → reglas de `parte.armar_borrador`) y lo compara contra los ítems de
-`/api/verdad` con `planta_sim.dialogo._comparar`: si no hay problemas, el operador lo habría confirmado al primer
-intento (criterio A2). Mide también si detectó las ambigüedades (A4a), si preguntó de más (A4b), la latencia y los
-tokens.
-
     python evaluacion/llm/bench_llm.py --capturas .local/capturas --modelos qwen3.5:2b gemma4:e2b \
         --planta-sim ../academia2026-tp/planta/sim --salida evaluacion/llm/resultados
 """
@@ -45,7 +39,7 @@ async def evaluar_modelo(nombre: str, notas: list[dict], planta: Planta, url: st
         borrador = armar_borrador(dictado, planta, n.get("fotos", [])) if dictado else []
         ambigua_verdad = bool(n.get("ambiguedades"))
         ambigua_pred = any(f.ambigua for f in borrador)
-        # Para comparar como lo haría el operador: las filas ambiguas se resuelven con la respuesta correcta.
+        # Las filas ambiguas se resuelven con la respuesta correcta, como haría el operador.
         tags_ambiguos = {a["tag"] for a in n.get("ambiguedades", []) if a["tipo"] == "equipo"}
         mostradas = []
         for f in borrador:

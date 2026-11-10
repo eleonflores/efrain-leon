@@ -1,11 +1,4 @@
-"""El lado "nube": recibe lo que la planta sincroniza cuando hay enlace.
-
-En la Entrega 1 guarda los eventos escalados y las alertas que llegan de la planta (con su contexto). En la Entrega 2
-acá corre el análisis de la anomalía. No está en la red de planta: la planta lo alcanza solo a través del proxy del
-enlace (`enlace:3128`), así que cuando el enlace se cae no llega nada y la planta acumula pendientes.
-
-    python -m sistema.nube        # escucha en :8000
-"""
+"""Servicio "nube": recibe y guarda los eventos que la planta sincroniza cuando hay enlace."""
 
 from __future__ import annotations
 
@@ -49,7 +42,7 @@ class Manejador(BaseHTTPRequestHandler):
             with (DATOS / "eventos.jsonl").open("a", encoding="utf-8") as f:
                 f.write(json.dumps(self.recibidos[cuerpo["id"]], ensure_ascii=False) + "\n")
             log.info("Recibido %s (%s)", cuerpo["id"], cuerpo.get("tipo"))
-        self._responder(200, {"ok": True, "nuevo": nuevo})   # idempotente: el mismo id no se duplica
+        self._responder(200, {"ok": True, "nuevo": nuevo})
 
     def log_message(self, *args) -> None:
         pass

@@ -1,11 +1,4 @@
-"""Repuestos, stock, listas de materiales y catálogo de tareas.
-
-La planta no los expone por API: salen de `materiales.yaml` (ruta en `MATERIALES_PATH`). Las tools no leen el YAML:
-le piden el catálogo entero a un `RepositorioMateriales`, una interfaz de un solo método asíncrono. Pasar a Postgres
-es escribir otra implementación de `cargar()` que arme el mismo `CatalogoMateriales`; las tools no se enteran.
-
-El catálogo es chico (decenas de filas) y se lee una vez: no vale la pena consultar por partes.
-"""
+"""Repuestos, stock, listas de materiales y catálogo de tareas."""
 
 from __future__ import annotations
 
@@ -51,7 +44,7 @@ class Tarea(BaseModel):
     detiene: bool
     horas: float = Field(ge=0)
     ejecutor: Literal["propio", "contratista"]
-    # None: el catálogo no dice qué repuestos lleva (pasa con las no estándar). Distinto de [] (no lleva ninguno).
+    # None: el catálogo no dice qué repuestos lleva; []: no lleva ninguno.
     repuestos: list[RepuestoDeTarea] | None = None
 
 
