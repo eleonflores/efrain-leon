@@ -15,3 +15,7 @@ build/
 # Embeddings de los modelos descartados (se regeneran con sistema.rag.indexar --precalcular)
 datos/documentos/embeddings_minilm-l12.npz
 datos/documentos/embeddings_jina-es-int8.npz
+
+# Configuración local del asistente (se regenera con `openspec init --tools claude`)
+.claude/
+CLAUDE.local.md

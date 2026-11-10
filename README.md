@@ -77,7 +77,10 @@ planta/recorridas ─► audio ─► Whisper small (local) ─► ¿condición 
                      sistema/eventos: SinNovedad / Escalado por equipo ─► cola hacia la nube (con parte, fotos, tendencia)
 ```
 
-- **Spec del flujo del parte** (estados, criterios de aceptación, ejemplos): [docs/spec-parte-por-voz.md](docs/spec-parte-por-voz.md).
+- **Specs (OpenSpec):** qué hace el sistema y por qué, un spec por capacidad con sus escenarios, en
+  [openspec/specs/](openspec/project.md): transcripción, alerta de seguridad, extracción del parte, diálogo con la
+  tablet, detección, latido y sincronización, control de ejecución, tools y búsqueda en manuales. Los cambios nuevos
+  entran como changes de OpenSpec (`openspec/changes/`).
 - **El modelo propone, el código dispone:** límites, conversiones, nombres de equipos, rangos y la decisión
   `SinNovedad`/`Escalado` son código determinístico. El texto de la nota entra delimitado como dato.
 - **Reglas primero, LLM de respaldo:** el dictado del operador es regular y las reglas lo resuelven en milisegundos.
@@ -173,7 +176,8 @@ src/sistema/
   nube.py              el lado nube (recibe lo sincronizado)
 ollama/                imagen del LLM local con el modelo adentro
 datos/                 planta, materiales y corpus de manuales (de Novit)
-docs/                  spec del parte, memoria, RAG
+openspec/              specs por capacidad (qué hace y por qué) y changes
+docs/                  diseño: memoria, context builder, RAG
 evaluacion/            suites de evaluación y resultados
 tests/
 ```

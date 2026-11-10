@@ -74,9 +74,9 @@ anterior (`CT-SVP-2025 §2.5`) **sí** aplican: valen para certificar trabajos d
 
 ## Búsqueda híbrida
 
-```
-pregunta ─┬─ embedding (e5-small, "query: …") ─── sem: coseno <=> (HNSW)                ─┐
-          ├─ + expansión (fallas, equipos) ────── lex: BM25 sobre tsvector (GIN)        ─┼─ RRF ─ top k ─ citas
+```text
+pregunta ─┬─ embedding (e5-small, "query: …") ─── sem: coseno <=> (HNSW)                ─┐  combinación
+          ├─ + expansión (fallas, equipos) ────── lex: BM25 sobre tsvector (GIN)        ─┼─ convexa ─ top k ─ citas
           └─ códigos exactos (+ MBP-4 §6.1) ───── cod: códigos raros, x2 si en el título ─┘
              cada lista: WHERE vigente AND aplica_pia3 AND <filtros>  (antes del LIMIT)
 ```
@@ -98,13 +98,13 @@ pregunta ─┬─ embedding (e5-small, "query: …") ─── sem: coseno <=> 
 - **Expansión de la consulta.** Fallas: si la pregunta trae `TX-T07`, se agrega `F09` (y al revés), con la tabla del
   MBP-4 §6.1 (un test verifica que coincide con la del corpus). Equipos: "la dos" agrega `B-102 B2 bomba 2`, que es
   como aparece en las órdenes.
-- **RRF**: `Σ peso / (k + posición)` sobre las tres listas (50 candidatos cada una). Combina posiciones, no puntajes,
-  así no hay que calibrar distancias coseno contra BM25.
+- **Fusión: combinación convexa** sobre las tres listas (50 candidatos cada una): cada una se normaliza min-max
+  dentro de la consulta y se suma con su peso (semántica 0,4, léxica 0,6, códigos 0,2). Conserva cuánto mejor es el
+  primero que el segundo y es estable para pesos semánticos entre 0,2 y 0,5. RRF (`Σ peso / (k + posición)`, k = 60)
+  combina solo posiciones y quedó debajo de BM25 en hit@5 (0,803): queda como opción (`fusion="rrf"`) para comparar.
 
 Sin reranker: un cross-encoder multilingüe chico (mMiniLM, ~120 M parámetros) costaría una inferencia por candidato
 (20 × ~30 ms) en una CPU que ya está ocupada con el LLM y la transcripción.
-
-<!-- RESULTADOS -->
 
 ## Carga al arrancar
 

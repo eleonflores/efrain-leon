@@ -1,0 +1,55 @@
+schema: spec-driven
+
+# Contexto del proyecto — se muestra a la IA al crear artefactos (proposal/specs/design/tasks).
+context: |
+  efrain-leon es el sistema agéntico de la PC de planta para la planta de inyección de agua PIA-3, trabajo
+  integrador de la Academia Novit 2026 (Desarrollo de Agentes IA y Software Agéntico). Se conecta a la planta
+  simulada de Novit (NovitSoftware/academia2026-tp) por MQTT (`planta/#`, `sistema/*`) y HTTP (`http://sim:8100`).
+  Convierte las notas de voz del operador en un parte, dialoga con la tablet, detecta SinNovedad/Escalado, da la
+  alerta de seguridad, encola lo escalado hacia la nube y expone tools de solo lectura (también por MCP) y un RAG
+  sobre los manuales.
+
+  Stack: Python 3.11 · asyncio · aiomqtt · httpx · Pydantic 2 · contrato `planta_contrato` (pip, commit fijo) ·
+  LangChain + Ollama (LLM local) · faster-whisper (transcripción) · fastembed (embeddings) · PostgreSQL 16 +
+  pgvector · SDK `mcp` · Docker Compose. Tests con pytest.
+
+  Restricciones duras: SOLO modelos locales, en CPU, dentro de 4 CPU y 8 GB para todos los servicios de planta
+  (sin GPU). La red de planta no tiene internet; la única salida es el proxy `enlace:3128`, que se cae. El parte,
+  la detección y la alerta de seguridad tienen que andar sin enlace. El corrector borra los volúmenes entre
+  escenarios: modelos e índices van dentro de las imágenes.
+
+  Principios: el modelo propone, el código dispone (límites, conversiones, nombres de equipos y decisiones son
+  código determinístico); reglas primero y LLM de respaldo; el texto de una nota es dato, nunca instrucción; todo
+  mensaje se valida contra `planta_contrato` antes de publicarse; ids idempotentes.
+
+  Estructura: `src/sistema/` (agente.py orquesta; dominio/, procesamiento/, llm/, herramientas/, rag/,
+  persistencia/, integraciones/), `evaluacion/` (suites de medición), `tests/`, `docs/` (diseño), `openspec/`.
+
+  IDIOMA: los artefactos se escriben en ESPAÑOL. Se mantienen en inglés las palabras clave RFC-2119
+  (SHALL / SHALL NOT / MUST) y los marcadores de escenario (WHEN / THEN / AND), además de identificadores, tipos,
+  rutas, tópicos MQTT y nombres de campos JSON.
+
+# Reglas por artefacto
+rules:
+  proposal:
+    - Escribir en español. Mantener en inglés SHALL/MUST/WHEN/THEN/AND y los identificadores de código.
+    - "Citar la entrega y el criterio del corrector que mueve el change (A1-A4b, B1, B2, D, E, F, G), si mueve alguno."
+    - "En `## Impact`, decir qué servicio de planta cambia y si afecta el presupuesto de 4 CPU y 8 GB."
+  specs:
+    - Cada requirement usa el literal SHALL/MUST (el validador lo exige). Prosa en español.
+    - "El porqué de una decisión va en el requirement como **Razón:**, con lo medido. El código no lleva justificaciones."
+    - "Todo lo que tenga que andar sin enlace lo dice con un escenario de enlace caído."
+  design:
+    - "Lo determinístico (límites, unidades, nombres de equipos, decisiones) va en código, no en el prompt."
+    - "Medir antes de elegir un modelo: latencia en 2 CPU, RAM y calidad sobre datos reales de la planta."
+    - "Ninguna dependencia de red fuera de la LAN de planta en el camino del parte, la detección o la alerta."
+  tasks:
+    - "Incluir la verificación: pytest en verde y, si el change toca el flujo de una nota, el corrector local sobre los escenarios de la entrega."
+    - "Tests solo de lo que vale la pena: reglas de negocio y casos reales que fallaron. Nada de defaults contra su literal ni comportamiento del framework; parametrizar en vez de repetir."
+    - "Comentarios en el código solo cuando el nombre no alcanza, en una línea neutral."
+
+naming:
+  pattern: "{ticket}-{name}"
+  ticketFormat: "^E\\d+-\\d+$"
+  requireTicket: false
+  ticketSeparators: ["-", ":", " "]
