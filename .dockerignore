@@ -1,0 +1,10 @@
+.local
+.git
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+evaluacion/*/resultados
+tests
+docs
+ollama

@@ -1,0 +1,452 @@
+{
+ "resumen": {
+  "modelo": "qwen3.5:2b",
+  "notas": 12,
+  "parte_ok": 0.333,
+  "json_ok": 0.5,
+  "detecta_ambiguas": "2/3",
+  "pregunta_de_mas": "1/9",
+  "latencia_p50_s": 78.9,
+  "latencia_p95_s": 90.0,
+  "tokens_entrada_prom": 430,
+  "tokens_salida_prom": 53
+ },
+ "notas": [
+  {
+   "nota_id": "NOTA-00006",
+   "escenario": "fuga-sin-enlace",
+   "texto": "Listo, la bomba está parada, en reserva.",
+   "ok": true,
+   "problemas": [],
+   "ambigua_verdad": true,
+   "ambigua_pred": false,
+   "latencia_s": 90.01,
+   "tokens_entrada": 0,
+   "tokens_salida": 0,
+   "json_ok": false,
+   "filas": []
+  },
+  {
+   "nota_id": "NOTA-00004",
+   "escenario": "fuga-sin-enlace",
+   "texto": "La dos está en 1610 libras de descarga. El pulmón está en 5 metros.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 1610.0,
+     "unidad": "psi",
+     "variable": "presion_descarga_local"
+    },
+    {
+     "tipo": "falta",
+     "tag": "TK-301",
+     "valor": 5.0,
+     "unidad": "m",
+     "variable": "nivel"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 90.002,
+   "tokens_entrada": 0,
+   "tokens_salida": 0,
+   "json_ok": false,
+   "filas": []
+  },
+  {
+   "nota_id": "NOTA-00005",
+   "escenario": "fuga-sin-enlace",
+   "texto": "La uno está en 114 kilos de descarga, el rodamiento me dio 64 grados con la pistola.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 114.0,
+     "unidad": "kg/cm2",
+     "variable": "presion_descarga_local"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 64.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 90.01,
+   "tokens_entrada": 0,
+   "tokens_salida": 0,
+   "json_ok": false,
+   "filas": []
+  },
+  {
+   "nota_id": "NOTA-00002",
+   "escenario": "martes-tranquilo",
+   "texto": "El de la izquierda me dio 1.4 de diferencial. La dos está en 1620 psi de descarga.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "F-201A",
+     "valor": 1.4,
+     "unidad": "kg/cm2",
+     "variable": "presion_diferencial"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 1620.0,
+     "unidad": "psi",
+     "variable": "presion_descarga_local"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 90.011,
+   "tokens_entrada": 0,
+   "tokens_salida": 0,
+   "json_ok": false,
+   "filas": []
+  },
+  {
+   "nota_id": "NOTA-00003",
+   "escenario": "martes-tranquilo",
+   "texto": "A ver, la de la punta está en 114 de descarga. El secundario me dio 1 de diferencial.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 114.0,
+     "unidad": "kg/cm2",
+     "variable": "presion_descarga_local"
+    },
+    {
+     "tipo": "falta",
+     "tag": "F-201B",
+     "valor": 1.0,
+     "unidad": "kg/cm2",
+     "variable": "presion_diferencial"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 90.01,
+   "tokens_entrada": 0,
+   "tokens_salida": 0,
+   "json_ok": false,
+   "filas": []
+  },
+  {
+   "nota_id": "NOTA-00005",
+   "escenario": "martes-tranquilo",
+   "texto": "El pulmón está en 5 metros.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "TK-301",
+     "valor": 5.0,
+     "unidad": "m",
+     "variable": "nivel"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 90.009,
+   "tokens_entrada": 0,
+   "tokens_salida": 0,
+   "json_ok": false,
+   "filas": []
+  },
+  {
+   "nota_id": "NOTA-00008",
+   "escenario": "martes-tranquilo",
+   "texto": "La bomba está parada, en reserva.",
+   "ok": true,
+   "problemas": [],
+   "ambigua_verdad": true,
+   "ambigua_pred": true,
+   "latencia_s": 51.377,
+   "tokens_entrada": 838,
+   "tokens_salida": 48,
+   "json_ok": true,
+   "filas": [
+    {
+     "tag": null,
+     "variable": "estado",
+     "valor": null,
+     "unidad": null,
+     "observacion": "parada, en reserva",
+     "fotos": [],
+     "dicho": "la bomba",
+     "candidatos": [
+      "B-101",
+      "B-102",
+      "B-103"
+     ],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    }
+   ]
+  },
+  {
+   "nota_id": "NOTA-00007",
+   "escenario": "martes-tranquilo",
+   "texto": "Listo, la del medio está en 1610 libras de descarga. El filtro A me dio 1.3 de diferencial.",
+   "ok": true,
+   "problemas": [],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 42.082,
+   "tokens_entrada": 859,
+   "tokens_salida": 99,
+   "json_ok": true,
+   "filas": [
+    {
+     "tag": "B-102",
+     "variable": "presion_descarga_local",
+     "valor": 1610.0,
+     "unidad": "psi",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "la del medio",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": "F-201A",
+     "variable": "presion_diferencial",
+     "valor": 1.3,
+     "unidad": "kg/cm2",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el filtro A",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    }
+   ]
+  },
+  {
+   "nota_id": "NOTA-00006",
+   "escenario": "martes-tranquilo",
+   "texto": "La de la punta está en 112 de descarga. El de la derecha me dio 0.9 de diferencial.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "F-201B",
+     "valor": 0.9,
+     "unidad": "kg/cm2",
+     "variable": "presion_diferencial"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": true,
+   "latencia_s": 42.884,
+   "tokens_entrada": 856,
+   "tokens_salida": 101,
+   "json_ok": true,
+   "filas": [
+    {
+     "tag": "B-101",
+     "variable": "presion_descarga_local",
+     "valor": 112.0,
+     "unidad": "kg/cm2",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "la de la punta",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": null,
+     "variable": "presion_diferencial",
+     "valor": 0.9,
+     "unidad": null,
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el filtro secundario",
+     "candidatos": [
+      "F-201A",
+      "F-201B"
+     ],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    }
+   ]
+  },
+  {
+   "nota_id": "NOTA-00010",
+   "escenario": "martes-tranquilo",
+   "texto": "El filtro B me dio 0.9 de diferencial. El pulmón está en 5 metros.",
+   "ok": true,
+   "problemas": [],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 41.473,
+   "tokens_entrada": 851,
+   "tokens_salida": 94,
+   "json_ok": true,
+   "filas": [
+    {
+     "tag": "F-201B",
+     "variable": "presion_diferencial",
+     "valor": 0.9,
+     "unidad": "kg/cm2",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el filtro B",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": "TK-301",
+     "variable": "nivel",
+     "valor": 5.0,
+     "unidad": "m",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el pulmón",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    }
+   ]
+  },
+  {
+   "nota_id": "NOTA-00011",
+   "escenario": "martes-tranquilo",
+   "texto": "La uno está en 112 kilogramos de descarga, el rodamiento me dio 59 grados con la pistola. También la bomba está en 1600 psi de descarga. El filtro A me dio 1.3 de diferencial.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "equipo",
+     "tag": "B-101",
+     "mostrado": "B-102",
+     "valor": 59.0
+    }
+   ],
+   "ambigua_verdad": true,
+   "ambigua_pred": true,
+   "latencia_s": 67.885,
+   "tokens_entrada": 883,
+   "tokens_salida": 198,
+   "json_ok": true,
+   "filas": [
+    {
+     "tag": "B-101",
+     "variable": "presion_descarga_local",
+     "valor": 112.0,
+     "unidad": "kg/cm2",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "la uno",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": null,
+     "variable": "temperatura_rodamiento_ir",
+     "valor": 59.0,
+     "unidad": "degC",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el rodamiento",
+     "candidatos": [
+      "B-101",
+      "B-102",
+      "B-103"
+     ],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": null,
+     "variable": "presion_descarga_local",
+     "valor": 1600.0,
+     "unidad": "psi",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "la bomba",
+     "candidatos": [
+      "B-101",
+      "B-102",
+      "B-103"
+     ],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": "F-201A",
+     "variable": "presion_diferencial",
+     "valor": 1.3,
+     "unidad": "kg/cm2",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el filtro A",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    }
+   ]
+  },
+  {
+   "nota_id": "NOTA-00013",
+   "escenario": "martes-tranquilo",
+   "texto": "Bueno, la dos está en 1590 libras de descarga. El filtro A me dio 1.3 de diferencial. La de la punta está en 112 kilos de descarga.",
+   "ok": false,
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 112.0,
+     "unidad": "kg/cm2",
+     "variable": "presion_descarga_local"
+    }
+   ],
+   "ambigua_verdad": false,
+   "ambigua_pred": false,
+   "latencia_s": 47.114,
+   "tokens_entrada": 873,
+   "tokens_salida": 100,
+   "json_ok": true,
+   "filas": [
+    {
+     "tag": "B-102",
+     "variable": "presion_descarga_local",
+     "valor": 1590.0,
+     "unidad": "psi",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "la dos",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    },
+    {
+     "tag": "F-201A",
+     "variable": "presion_diferencial",
+     "valor": 1.3,
+     "unidad": "kg/cm2",
+     "observacion": null,
+     "fotos": [],
+     "dicho": "el filtro A",
+     "candidatos": [],
+     "valor_dicho": null,
+     "fuera_de_rango": null
+    }
+   ]
+  }
+ ]
+}

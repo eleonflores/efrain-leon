@@ -1,0 +1,102 @@
+# Sistema de Efrain Leon para la planta de inyección PIA-3 (TP Academia Novit 2026).
+#
+# Se levanta al lado de la planta simulada (repo NovitSoftware/academia2026-tp), que crea las redes planta-lan y
+# planta-control:
+#
+#   docker compose up -d --build
+#
+# PC de planta (red planta-lan, label academia.planta=pc, entre todos 4 CPU y 8 GB, sin GPU):
+#   sistema       escucha la planta, transcribe, arma el parte, dialoga con la tablet, detecta y alerta
+#   ollama        LLM local (CPU)
+#   db            PostgreSQL 16 + pgvector: memoria de las notas, partes, eventos, trazabilidad, cola a la nube, RAG
+#   herramientas  tools de solo lectura expuestas por MCP (Streamable HTTP en :8001/mcp)
+# Nube (fuera de la planta; se la alcanza solo por el proxy del enlace):
+#   nube          recibe lo escalado cuando hay enlace
+
+name: efrain-leon
+
+x-planta: &planta
+  networks: [planta-lan]
+  labels:
+    academia.planta: pc
+  environment: &entorno
+    SISTEMA_NOMBRE: Efrain Leon
+    MQTT_HOST: broker
+    PLANTA_URL: http://sim:8100
+    DATABASE_URL: postgresql://sistema:sistema@db:5432/sistema
+    OLLAMA_URL: http://ollama:11434
+    LLM_MODELO: ${LLM_MODELO:-qwen3.5:2b}
+    NUBE_URL: http://nube:8000
+    HTTP_PROXY: http://enlace:3128
+    HTTPS_PROXY: http://enlace:3128
+    # Además de lo que pide el anexo (broker, sim, localhost), los servicios propios de la PC de planta: sin esto el
+    # LLM local saldría por el enlace y dejaría de andar cuando el enlace se cae.
+    NO_PROXY: broker,sim,localhost,db,ollama,herramientas
+    no_proxy: broker,sim,localhost,db,ollama,herramientas
+
+services:
+  sistema:
+    <<: *planta
+    build: .
+    command: ["python", "-m", "sistema.agente"]
+    environment:
+      <<: *entorno
+      STT_HILOS: "2"
+      LLM_HILOS: "2"
+    depends_on: [db, ollama]
+    deploy:
+      resources:
+        limits: {cpus: "2.0", memory: 2560m}
+
+  ollama:
+    <<: *planta
+    build:
+      context: ./ollama
+      args:
+        LLM_MODELO: ${LLM_MODELO:-qwen3.5:2b}
+    deploy:
+      resources:
+        limits: {cpus: "1.5", memory: 4096m}
+
+  db:
+    <<: *planta
+    image: pgvector/pgvector:0.8.1-pg16
+    environment:
+      POSTGRES_USER: sistema
+      POSTGRES_PASSWORD: sistema      # credenciales locales de la PC de planta, solo para la demo
+      POSTGRES_DB: sistema
+    volumes:
+      - db-datos:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits: {cpus: "0.25", memory: 768m}
+
+  herramientas:
+    <<: *planta
+    build: .
+    command: ["python", "-m", "sistema.herramientas.servidor_mcp"]
+    environment:
+      <<: *entorno
+      MCP_PUERTO: "8001"
+    deploy:
+      resources:
+        limits: {cpus: "0.25", memory: 512m}
+
+  nube:
+    build: .
+    command: ["python", "-m", "sistema.nube"]
+    networks: [planta-control]
+    environment:
+      NUBE_DATOS: /datos
+    volumes:
+      - nube-datos:/datos
+
+networks:
+  planta-lan:
+    external: true
+  planta-control:
+    external: true
+
+volumes:
+  db-datos:
+  nube-datos:

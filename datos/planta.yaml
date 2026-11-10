@@ -1,0 +1,86 @@
+# Definición de la planta de inyección. Fuente única de verdad para el simulador,
+# el visor y los datos que se entregan a los cursantes.
+
+planta:
+  nombre: Planta de Inyección PIA-3
+  yacimiento: Cerro Dragón Sur (hipotético)
+  cuenca: Golfo San Jorge
+  inyeccion_programada_m3d: 2400
+  zona_horaria: America/Argentina/Buenos_Aires
+
+equipos:
+  - tag: B-101
+    tipo: bomba
+    descripcion: Bomba alternativa triplex 1
+    fabricante: Trimax Industrial
+    modelo: TX-350
+    nombres: [la uno, la 1, la de la punta, la del portón, bomba uno]
+    caudal_nominal_m3d: 1300
+    manometro_local: {unidad: kg/cm2}
+    rol_inicial: servicio
+  - tag: B-102
+    tipo: bomba
+    descripcion: Bomba alternativa triplex 2
+    fabricante: Trimax Industrial
+    modelo: TX-350
+    nombres: [la dos, la 2, la del medio, bomba dos]
+    caudal_nominal_m3d: 1300
+    manometro_local: {unidad: psi}
+    rol_inicial: servicio
+  - tag: B-103
+    tipo: bomba
+    descripcion: Bomba alternativa triplex 3
+    fabricante: Trimax Industrial
+    modelo: TX-350
+    nombres: [la tres, la 3, la del fondo, la de reserva, bomba tres]
+    caudal_nominal_m3d: 1300
+    manometro_local: {unidad: bar}
+    rol_inicial: reserva
+  - tag: F-201A
+    tipo: filtro
+    descripcion: Filtro de cartuchos primario 25 µm
+    fabricante: Filtrapat
+    modelo: FC-48
+    nombres: [el filtro A, el primario, el de la izquierda, el grueso]
+    cartuchos: 48
+  - tag: F-201B
+    tipo: filtro
+    descripcion: Filtro de cartuchos secundario 10 µm
+    fabricante: Filtrapat
+    modelo: FC-48
+    nombres: [el filtro B, el secundario, el de la derecha, el fino]
+    cartuchos: 48
+  - tag: TK-301
+    tipo: tanque
+    descripcion: Tanque pulmón de agua tratada
+    nombres: [el pulmón, el tanque, el tanque pulmón]
+    altura_m: 8.0
+    diametro_m: 12.0
+  - tag: FT-401
+    tipo: caudalimetro
+    descripcion: Caudalímetro del colector de inyección
+    nombres: [el caudalímetro, el colector]
+
+# Sensores conectados al sistema de control. Los límites de alarma son los de la hoja de datos.
+sensores:
+  - {tag: B-101, variable: presion_succion,   unidad: kg/cm2, alarma_baja: 0.9}
+  - {tag: B-101, variable: presion_descarga,  unidad: kg/cm2, alarma_alta: 125, alarma_baja: 95}
+  - {tag: B-101, variable: temperatura_aceite, unidad: degC,  alarma_alta: 80, disparo: 90}
+  - {tag: B-101, variable: vibracion,          unidad: mm/s,  alarma_alta: 7.1, disparo: 11.2}
+  - {tag: B-102, variable: presion_succion,   unidad: kg/cm2, alarma_baja: 0.9}
+  - {tag: B-102, variable: presion_descarga,  unidad: kg/cm2, alarma_alta: 125, alarma_baja: 95}
+  - {tag: B-102, variable: temperatura_aceite, unidad: degC,  alarma_alta: 80, disparo: 90}
+  - {tag: B-102, variable: vibracion,          unidad: mm/s,  alarma_alta: 7.1, disparo: 11.2}
+  - {tag: B-103, variable: presion_succion,   unidad: kg/cm2, alarma_baja: 0.9}
+  - {tag: B-103, variable: presion_descarga,  unidad: kg/cm2, alarma_alta: 125, alarma_baja: 95}
+  - {tag: B-103, variable: temperatura_aceite, unidad: degC,  alarma_alta: 80, disparo: 90}
+  - {tag: B-103, variable: vibracion,          unidad: mm/s,  alarma_alta: 7.1, disparo: 11.2}
+  - {tag: F-201A, variable: presion_diferencial, unidad: kg/cm2, alarma_alta: 1.5, alarma_baja: 0.15}
+  - {tag: F-201B, variable: presion_diferencial, unidad: kg/cm2, alarma_alta: 1.5, alarma_baja: 0.15}
+  - {tag: FT-401, variable: caudal,             unidad: m3/d,  alarma_baja: 2200}
+
+# Lo que el operador lee en la recorrida y no está conectado al sistema de control.
+lecturas_locales:
+  bombas: [presion_descarga_local, temperatura_rodamiento_ir, temperatura_motor_ir, goteo_empaquetadura, nivel_aceite_visor, estado_correas]
+  filtros: [presion_diferencial_local]
+  tanque: [nivel]

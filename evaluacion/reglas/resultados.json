@@ -1,0 +1,901 @@
+{
+ "resumen": {
+  "notas": 400,
+  "resueltas_por_reglas": 400,
+  "al_llm": 0,
+  "primer_borrador_ok": "382/400",
+  "ambiguas_detectadas": "32/32",
+  "pregunta_de_mas": 0,
+  "b1_ok": "672/675"
+ },
+ "fallas": [
+  {
+   "tipo": "error",
+   "texto": "La de la punta está en ciento catorce de descarga. También la del medio pierde bastante por la empaquetadura, le saqué foto, el rodamiento me dio cincuenta y seis grados con la pistola.",
+   "problemas": [
+    {
+     "tipo": "valor",
+     "tag": "B-102",
+     "esperado": 140,
+     "mostrado": 56.0,
+     "unidad": "gotas/min"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 56.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "b1_esperado": {
+    "B-101": false,
+    "B-102": true
+   },
+   "b1_nuestro": {
+    "B-101": false,
+    "B-102": true
+   },
+   "filas": [
+    [
+     "B-101",
+     "presion_descarga_local",
+     114.0,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "pérdida importante por empaquetadura"
+    ],
+    [
+     "B-102",
+     "temperatura_rodamiento_ir",
+     56.0,
+     "degC",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "El primario me dio cero coma cinco de diferencial. La uno está en ciento catorce de descarga, sigue goteando por la empaquetadura, le saqué foto.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 113,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "F-201A": false,
+    "B-101": true
+   },
+   "b1_nuestro": {
+    "F-201A": false,
+    "B-101": true
+   },
+   "filas": [
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.5,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-101",
+     "presion_descarga_local",
+     114.0,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-101",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "Eh, la del medio está en mil seiscientos veinte libras de descarga, gotea por la empaquetadura, le saqué foto. La de la punta está parada por mantenimiento.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 29,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true,
+    "B-101": false
+   },
+   "b1_nuestro": {
+    "B-102": true,
+    "B-101": false
+   },
+   "filas": [
+    [
+     "B-102",
+     "presion_descarga_local",
+     1620.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "B-101",
+     "estado",
+     null,
+     null,
+     "parada por mantenimiento"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La del medio está en mil seiscientos libras de descarga, pierde bastante por la empaquetadura, le saqué foto, el rodamiento me dio cincuenta y siete grados con la pistola.",
+   "problemas": [
+    {
+     "tipo": "valor",
+     "tag": "B-102",
+     "esperado": 146,
+     "mostrado": 57.0,
+     "unidad": "gotas/min"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 57.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true
+   },
+   "b1_nuestro": {
+    "B-102": true
+   },
+   "filas": [
+    [
+     "B-102",
+     "presion_descarga_local",
+     1600.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "pérdida importante por empaquetadura"
+    ],
+    [
+     "B-102",
+     "temperatura_rodamiento_ir",
+     57.0,
+     "degC",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "El filtro A me dio cero con cuatro de diferencial. La del medio gotea por la empaquetadura, le saqué foto, el rodamiento me dio cincuenta y ocho grados con la pistola.",
+   "problemas": [
+    {
+     "tipo": "valor",
+     "tag": "B-102",
+     "esperado": 117,
+     "mostrado": 58.0,
+     "unidad": "gotas/min"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 58.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "b1_esperado": {
+    "F-201A": false,
+    "B-102": true
+   },
+   "b1_nuestro": {
+    "F-201A": false,
+    "B-102": true
+   },
+   "filas": [
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.4,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "B-102",
+     "temperatura_rodamiento_ir",
+     58.0,
+     "degC",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "El filtro A me dio cero coma cinco de diferencial. La del medio está en mil seiscientos diez psi de descarga, chorrea por la empaquetadura, le saqué foto.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 134,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "F-201A": false,
+    "B-102": true
+   },
+   "b1_nuestro": {
+    "F-201A": false,
+    "B-102": true
+   },
+   "filas": [
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.5,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-102",
+     "presion_descarga_local",
+     1610.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "pérdida importante por empaquetadura"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La de la punta está en ciento catorce kilos de descarga, gotea por la empaquetadura, le saqué foto, el rodamiento me dio cincuenta y cinco grados con la pistola. Ah, y la del medio está en mil seiscientos cuarenta libras de descarga.",
+   "problemas": [
+    {
+     "tipo": "valor",
+     "tag": "B-101",
+     "esperado": 35,
+     "mostrado": 55.0,
+     "unidad": "gotas/min"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 55.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "b1_esperado": {
+    "B-101": true,
+    "B-102": false
+   },
+   "b1_nuestro": {
+    "B-101": true,
+    "B-102": false
+   },
+   "filas": [
+    [
+     "B-101",
+     "presion_descarga_local",
+     114.0,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-101",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "B-101",
+     "temperatura_rodamiento_ir",
+     55.0,
+     "degC",
+     null
+    ],
+    [
+     "B-102",
+     "presion_descarga_local",
+     1640.0,
+     "psi",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La uno está en ciento catorce kilos de descarga, el visor de aceite está bajo. Además la bomba está en mil seiscientos de descarga, el rodamiento me dio cincuenta y siete grados con la pistola.",
+   "problemas": [],
+   "b1_esperado": {
+    "B-101": true,
+    "B-102": false
+   },
+   "b1_nuestro": {
+    "B-101": true,
+    "B-102": true
+   },
+   "filas": [
+    [
+     "B-101",
+     "presion_descarga_local",
+     114.0,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-101",
+     "nivel_aceite_visor",
+     null,
+     null,
+     "nivel de aceite bajo"
+    ],
+    [
+     null,
+     "presion_descarga_local",
+     1600.0,
+     null,
+     null
+    ],
+    [
+     null,
+     "temperatura_rodamiento_ir",
+     57.0,
+     "degC",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La del medio gotea por la empaquetadura, le saqué foto. La de la punta está en ciento trece kilos de descarga.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 50,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true,
+    "B-101": false
+   },
+   "b1_nuestro": {
+    "B-102": true,
+    "B-101": false
+   },
+   "filas": [
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "B-101",
+     "presion_descarga_local",
+     113.0,
+     "kg/cm2",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "Listo, la del fondo está parada, en reserva. La uno está en ciento trece kilogramos de descarga, sigue goteando por la empaquetadura, le saqué foto.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 106,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-103": false,
+    "B-101": true
+   },
+   "b1_nuestro": {
+    "B-103": false,
+    "B-101": true
+   },
+   "filas": [
+    [
+     "B-103",
+     "estado",
+     null,
+     null,
+     "parada, en reserva"
+    ],
+    [
+     "B-101",
+     "presion_descarga_local",
+     113.0,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-101",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La del medio está en mil seiscientos treinta de descarga. La de la punta está en ciento trece kilogramos de descarga, chorrea por la empaquetadura, le saqué foto. La tres está parada, en reserva.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 203,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": false,
+    "B-101": true,
+    "B-103": false
+   },
+   "b1_nuestro": {
+    "B-102": false,
+    "B-101": true,
+    "B-103": false
+   },
+   "filas": [
+    [
+     "B-102",
+     "presion_descarga_local",
+     1630.0,
+     "psi",
+     null
+    ],
+    [
+     "B-101",
+     "presion_descarga_local",
+     113.0,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-101",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "pérdida importante por empaquetadura"
+    ],
+    [
+     "B-103",
+     "estado",
+     null,
+     null,
+     "parada, en reserva"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La dos está en mil seiscientos libras de descarga, sigue goteando por la empaquetadura, le saqué foto. También el primario me dio cero cinco de diferencial.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 106,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true,
+    "F-201A": false
+   },
+   "b1_nuestro": {
+    "B-102": true,
+    "F-201A": false
+   },
+   "filas": [
+    [
+     "B-102",
+     "presion_descarga_local",
+     1600.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.5,
+     "kg/cm2",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "Eh, la dos está en mil seiscientos veinte psi de descarga, sigue goteando por la empaquetadura, le saqué foto.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 32,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true
+   },
+   "b1_nuestro": {
+    "B-102": true
+   },
+   "filas": [
+    [
+     "B-102",
+     "presion_descarga_local",
+     1620.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La del medio está en mil seiscientos diez de descarga, sigue goteando por la empaquetadura, le saqué foto. El de la derecha me dio cero con seis de diferencial.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 94,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true,
+    "F-201B": false
+   },
+   "b1_nuestro": {
+    "B-102": true,
+    "F-201B": false
+   },
+   "filas": [
+    [
+     "B-102",
+     "presion_descarga_local",
+     1610.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "F-201B",
+     "presion_diferencial",
+     0.6,
+     "kg/cm2",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "El de la izquierda me dio cero cuatro de diferencial. La bomba está en mil seiscientos veinte de descarga. La de la punta está en ciento catorce de descarga.",
+   "problemas": [],
+   "b1_esperado": {
+    "F-201A": false,
+    "B-102": false,
+    "B-101": false
+   },
+   "b1_nuestro": {
+    "F-201A": false,
+    "B-102": true,
+    "B-101": false
+   },
+   "filas": [
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.4,
+     "kg/cm2",
+     null
+    ],
+    [
+     null,
+     "presion_descarga_local",
+     1620.0,
+     null,
+     null
+    ],
+    [
+     "B-101",
+     "presion_descarga_local",
+     114.0,
+     "kg/cm2",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La de la punta gotea por la empaquetadura, le saqué foto. El filtro A me dio cero coma siete de diferencial.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 38,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-101": true,
+    "F-201A": false
+   },
+   "b1_nuestro": {
+    "B-101": true,
+    "F-201A": false
+   },
+   "filas": [
+    [
+     "B-101",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.7,
+     "kg/cm2",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "Listo, el secundario me dio cero coma cuatro de diferencial. La dos está en mil seiscientos diez libras de descarga, chorrea por la empaquetadura, le saqué foto, el rodamiento me dio cincuenta y seis grados con la pistola. El de la izquierda me dio cero cuatro de diferencial.",
+   "problemas": [
+    {
+     "tipo": "valor",
+     "tag": "B-102",
+     "esperado": 155,
+     "mostrado": 56.0,
+     "unidad": "gotas/min"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 56.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "b1_esperado": {
+    "F-201B": false,
+    "B-102": true,
+    "F-201A": false
+   },
+   "b1_nuestro": {
+    "F-201B": false,
+    "B-102": true,
+    "F-201A": false
+   },
+   "filas": [
+    [
+     "F-201B",
+     "presion_diferencial",
+     0.4,
+     "kg/cm2",
+     null
+    ],
+    [
+     "B-102",
+     "presion_descarga_local",
+     1610.0,
+     "psi",
+     null
+    ],
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "pérdida importante por empaquetadura"
+    ],
+    [
+     "B-102",
+     "temperatura_rodamiento_ir",
+     56.0,
+     "degC",
+     null
+    ],
+    [
+     "F-201A",
+     "presion_diferencial",
+     0.4,
+     "kg/cm2",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "Bien, la dos sigue goteando por la empaquetadura, le saqué foto, el rodamiento me dio cincuenta y seis grados con la pistola.",
+   "problemas": [
+    {
+     "tipo": "valor",
+     "tag": "B-102",
+     "esperado": 40,
+     "mostrado": 56.0,
+     "unidad": "gotas/min"
+    },
+    {
+     "tipo": "falta",
+     "tag": "B-102",
+     "valor": 56.0,
+     "unidad": "degC",
+     "variable": "temperatura_rodamiento_ir"
+    }
+   ],
+   "b1_esperado": {
+    "B-102": true
+   },
+   "b1_nuestro": {
+    "B-102": true
+   },
+   "filas": [
+    [
+     "B-102",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "goteo por empaquetadura"
+    ],
+    [
+     "B-102",
+     "temperatura_rodamiento_ir",
+     56.0,
+     "degC",
+     null
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La de la punta chorrea por la empaquetadura, le saqué foto.",
+   "problemas": [
+    {
+     "tipo": "falta",
+     "tag": "B-101",
+     "valor": 125,
+     "unidad": "gotas/min",
+     "variable": "goteo_empaquetadura"
+    }
+   ],
+   "b1_esperado": {
+    "B-101": true
+   },
+   "b1_nuestro": {
+    "B-101": true
+   },
+   "filas": [
+    [
+     "B-101",
+     "goteo_empaquetadura",
+     null,
+     "gotas/min",
+     "pérdida importante por empaquetadura"
+    ]
+   ]
+  },
+  {
+   "tipo": "error",
+   "texto": "La bomba está en ciento trece de descarga. La bomba está en mil seiscientos diez de descarga.",
+   "problemas": [
+    {
+     "tipo": "equipo",
+     "tag": "B-102",
+     "mostrado": "B-101",
+     "valor": 1610.0
+    }
+   ],
+   "b1_esperado": {
+    "B-101": false,
+    "B-102": false
+   },
+   "b1_nuestro": {
+    "B-101": true
+   },
+   "filas": [
+    [
+     null,
+     "presion_descarga_local",
+     113.0,
+     null,
+     null
+    ],
+    [
+     null,
+     "presion_descarga_local",
+     1610.0,
+     null,
+     null
+    ]
+   ]
+  }
+ ]
+}

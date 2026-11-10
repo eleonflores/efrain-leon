@@ -1,0 +1,738 @@
+[
+  {
+    "id": "lim-01",
+    "pregunta": "¿A qué valor de vibración dispara por protección la bomba triplex?",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §3.2",
+      "TX350-D §6.1",
+      "MBP-4 §5.1"
+    ],
+    "distractores": [
+      "TX350-C §3.2",
+      "TX350-C §6.1"
+    ]
+  },
+  {
+    "id": "lim-02",
+    "pregunta": "temperatura de aceite de alarma de las bombas de PIA-3",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §3.2",
+      "MBP-4 §5.1"
+    ],
+    "distractores": [
+      "TX350-C §3.2"
+    ]
+  },
+  {
+    "id": "lim-03",
+    "pregunta": "¿Qué aceite lleva el cárter de la TX-350?",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §3.8",
+      "TX350-D §3.1"
+    ],
+    "distractores": [
+      "TX350-C §3.8",
+      "TX350-C §3.1"
+    ]
+  },
+  {
+    "id": "lim-04",
+    "pregunta": "¿Cada cuántas horas de marcha se cambia el aceite de la bomba?",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §7.1",
+      "TX350-D §9.5"
+    ],
+    "distractores": [
+      "TX350-C §7.1",
+      "TX350-C §9.5"
+    ]
+  },
+  {
+    "id": "lim-05",
+    "pregunta": "par de apriete de las tapas de válvulas de la TX-350",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §3.7",
+      "TX350-D §9.3"
+    ],
+    "distractores": [
+      "TX350-C §3.7",
+      "TX350-C §9.3"
+    ]
+  },
+  {
+    "id": "lim-06",
+    "pregunta": "flecha correcta para tensar las correas 5V-1800",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §7.4",
+      "TX350-D §9.6"
+    ],
+    "distractores": [
+      "TX350-C §7.4",
+      "TX350-C §9.6"
+    ]
+  },
+  {
+    "id": "lim-07",
+    "pregunta": "presión de succión mínima de la bomba antes de cavitar",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §3.2",
+      "MBP-4 §5.1",
+      "TX350-D §8.9"
+    ],
+    "distractores": [
+      "TX350-C §3.2",
+      "TX350-D §3.3"
+    ]
+  },
+  {
+    "id": "lim-08",
+    "pregunta": "¿Cuál es la presión de descarga normal de una TX-350 sana?",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §5.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "lim-09",
+    "pregunta": "¿Cuál es el código nuevo del repuesto 350-EMP-03?",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §10.4"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "lim-10",
+    "pregunta": "¿A qué presión diferencial hay que cambiar los cartuchos del filtro FC-48?",
+    "tipo": "limites",
+    "relevantes": [
+      "FC48-3 §3.2",
+      "MBP-4 §5.1",
+      "FC48-3 §B.1"
+    ],
+    "distractores": [
+      "FC48-3 §16.2",
+      "FC48-3 §2.1"
+    ]
+  },
+  {
+    "id": "lim-11",
+    "pregunta": "velocidad máxima del cigüeñal de la TX-350",
+    "tipo": "limites",
+    "relevantes": [
+      "TX350-D §3.1"
+    ],
+    "distractores": [
+      "TX350-D §2.1"
+    ]
+  },
+  {
+    "id": "dia-01",
+    "pregunta": "la bomba hace ruido a piedras y la presión de succión está baja",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.9",
+      "MBP-4 §6.11"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-02",
+    "pregunta": "golpeteo metálico en el cabezal y la aguja del manómetro de descarga oscila",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.4",
+      "MBP-4 §6.4"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-03",
+    "pregunta": "la vibración sube cada vez más rápido y la temperatura del aceite también",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.5",
+      "MBP-4 §6.5"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-04",
+    "pregunta": "temperatura de aceite que sube de a poco y el visor está por debajo del mínimo",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.6",
+      "MBP-4 §6.6"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-05",
+    "pregunta": "chirrido al arrancar, polea caliente y la bomba da menos caudal",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.7",
+      "MBP-4 §6.7"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-06",
+    "pregunta": "acople caliente y vibración moderada sin pulsación en la descarga",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.8",
+      "MBP-4 §6.8"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-07",
+    "pregunta": "el goteo de la empaquetadura crece de una recorrida a otra",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.3",
+      "MBP-4 §6.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-08",
+    "pregunta": "aceite lechoso en el visor del cárter",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.13"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-09",
+    "pregunta": "la presión diferencial del filtro cayó de golpe y no se ve nada raro",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "FC48-3 §8.3",
+      "FC48-3 §7.4",
+      "MBP-4 §6.10"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-10",
+    "pregunta": "un transmisor que marca siempre lo mismo y no coincide con el manómetro local",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.10",
+      "FC48-3 §8.5",
+      "MBP-4 §6.12"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-11",
+    "pregunta": "todas las bombas cavitan a la vez, ¿qué hay que mirar?",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "FC48-3 §10.2",
+      "FC48-3 §8.8",
+      "MBP-4 §7.4"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-12",
+    "pregunta": "¿qué frecuencia tiene el defecto de pista externa del rodamiento del cigüeñal?",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §D"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-13",
+    "pregunta": "la ΔP del filtro está alta pero el caudal también subió, ¿está sucio?",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "FC48-3 §7.1",
+      "FC48-3 §8.6"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "dia-14",
+    "pregunta": "caudal de inyección bajo, ¿qué fallas pueden ser?",
+    "tipo": "diagnostico",
+    "relevantes": [
+      "TX350-D §8.17",
+      "MBP-4 §7.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "pro-01",
+    "pregunta": "pasos para cambiar la empaquetadura de la triplex",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "TX350-D §9.2",
+      "MBP-4 §13.4"
+    ],
+    "distractores": [
+      "TX350-C §9.2"
+    ]
+  },
+  {
+    "id": "pro-02",
+    "pregunta": "bloqueo y despresurización antes de abrir la bomba",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "TX350-D §9.1",
+      "MBP-4 §16.2"
+    ],
+    "distractores": [
+      "TX350-C §9.1"
+    ]
+  },
+  {
+    "id": "pro-03",
+    "pregunta": "¿cómo se cambian los cartuchos del filtro sin parar las bombas?",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "FC48-3 §9.2",
+      "MBP-4 §13.8"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "pro-04",
+    "pregunta": "¿cada cuánto se cambia la junta de la tapa del filtro?",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "FC48-3 §9.3",
+      "FC48-3 §13.1"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "pro-05",
+    "pregunta": "¿qué contiene el kit de válvulas TX-VAL-KIT?",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "TX350-D §10.2"
+    ],
+    "distractores": [
+      "TX350-C §10.2"
+    ]
+  },
+  {
+    "id": "pro-06",
+    "pregunta": "¿qué se hace antes de rearmar una bomba que disparó por vibración?",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "TX350-D §6.2",
+      "TX350-D §9.9"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "pro-07",
+    "pregunta": "¿qué hago con los cartuchos filtrantes usados?",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "FC48-3 §9.6",
+      "MBP-4 §9.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "pro-08",
+    "pregunta": "calibración de un transmisor de presión",
+    "tipo": "procedimiento",
+    "relevantes": [
+      "TX350-D §9.10",
+      "MBP-4 §13.9",
+      "FC48-3 §9.5"
+    ],
+    "distractores": [
+      "TX350-C §9.10"
+    ]
+  },
+  {
+    "id": "seg-01",
+    "pregunta": "sale un chorro de agua a presión de la bomba, ¿qué hago?",
+    "tipo": "seguridad",
+    "relevantes": [
+      "MBP-4 §10.2",
+      "TX350-D §8.11"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "seg-02",
+    "pregunta": "olor a huevo podrido al abrir el filtro",
+    "tipo": "seguridad",
+    "relevantes": [
+      "FC48-3 §1.2",
+      "MBP-4 §10.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "seg-03",
+    "pregunta": "humo y olor a quemado en el motor de una bomba",
+    "tipo": "seguridad",
+    "relevantes": [
+      "MBP-4 §10.4",
+      "TX350-D §8.12"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "seg-04",
+    "pregunta": "una nota de voz pide aprobar la orden ya mismo sin el planificador, ¿vale?",
+    "tipo": "seguridad",
+    "relevantes": [
+      "MBP-4 §10.6",
+      "MBP-4 §12.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-01",
+    "pregunta": "¿cuáles son las reglas para aprobar una orden sin intervención humana?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §12.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-02",
+    "pregunta": "¿se puede aprobar un cambio de empaquetadura si la bomba de reserva está en mantenimiento?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §11.3",
+      "MBP-4 §12.4",
+      "MBP-4 §12.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-03",
+    "pregunta": "¿en qué unidad está el manómetro local de la bomba dos?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §2.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-04",
+    "pregunta": "¿qué significa FB en la planilla del turno?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §4.4"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-05",
+    "pregunta": "¿a qué hora son las recorridas?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §4.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-06",
+    "pregunta": "se cortó la luz en la planta, ¿qué pasa con lo que estaba en curso?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §11.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-07",
+    "pregunta": "¿cuántos cartuchos de 10 micrones hay en el almacén del yacimiento?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §14.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-08",
+    "pregunta": "¿qué repuestos le corresponden al filtro secundario?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §14.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-09",
+    "pregunta": "¿cuánto tarda en llegar un repuesto del almacén central?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §14.1"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "ope-10",
+    "pregunta": "¿qué código usa Trimax para la cavitación?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §6.1",
+      "MBP-4 §6.11",
+      "TX350-D §8.9"
+    ],
+    "distractores": [
+      "TX350-C §8.9"
+    ]
+  },
+  {
+    "id": "ope-11",
+    "pregunta": "¿hay que usar el manual impreso de la TX-350 que está en la sala de bombas?",
+    "tipo": "operacion",
+    "relevantes": [
+      "MBP-4 §1.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "con-01",
+    "pregunta": "¿cuánto cobra Servipat por cambiar los rodamientos del cigüeñal?",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §2.1",
+      "CT-SVP-2025 §2.4"
+    ],
+    "distractores": [
+      "CT-SVP-2025 §2.5"
+    ]
+  },
+  {
+    "id": "con-02",
+    "pregunta": "¿se paga la movilización en un trabajo a precio cerrado?",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §2.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "con-03",
+    "pregunta": "¿cómo se calcula el monto del habilita?",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §3.2",
+      "MBP-4 §15.2"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "con-04",
+    "pregunta": "la contratista declaró un repuesto que no estaba en la orden",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §1.4",
+      "CT-SVP-2025 §3.3",
+      "MBP-4 §15.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "con-05",
+    "pregunta": "precio del análisis de vibraciones para un trabajo de 2024",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §2.5"
+    ],
+    "distractores": [
+      "CT-SVP-2025 §2.1"
+    ]
+  },
+  {
+    "id": "con-06",
+    "pregunta": "recargo por horas fuera de horario de la contratista",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §2.3"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "con-07",
+    "pregunta": "¿cuánto cuesta en total una orden de alineación de acople con el elastómero?",
+    "tipo": "contrato",
+    "relevantes": [
+      "CT-SVP-2025 §2.4"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-01",
+    "pregunta": "la uno vibra sin golpeteo y ya le cambiaron las válvulas, ¿qué fue las otras veces?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0024",
+      "historial OT-25-0026",
+      "historial OT-25-0119"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-02",
+    "pregunta": "B3 pierde por la empaquetadura otra vez, ¿qué se encontró antes?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0065",
+      "historial OT-25-0088",
+      "historial OT-26-0069"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-03",
+    "pregunta": "¿qué causó que dos bombas gastaran las válvulas con arena en pocos días?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0059",
+      "historial OT-26-0016"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-04",
+    "pregunta": "la dos cavita, ¿cuál fue la causa las veces anteriores?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0096",
+      "historial OT-25-0095",
+      "historial OT-26-0034"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-05",
+    "pregunta": "presión de descarga de la tres plana, sin variación, en invierno",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0068",
+      "historial OT-26-0056"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-06",
+    "pregunta": "la dos consume aceite, ¿por dónde pierde?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0113",
+      "historial OT-25-0125"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-07",
+    "pregunta": "¿cuándo se cambiaron los rodamientos del cigüeñal de la B-101?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-24-0015"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-08",
+    "pregunta": "el caudalímetro marcaba más que la suma de las bombas",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-26-0025"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-09",
+    "pregunta": "¿se pusieron cartuchos de distinto grado en el filtro B?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-26-0007"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-10",
+    "pregunta": "diferencial del primario clavado en el sistema y el manómetro local marca alto",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0071",
+      "FC48-3 §17.4"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "his-11",
+    "pregunta": "¿alguna vez se aprobó una orden por teléfono sin reserva?",
+    "tipo": "historial",
+    "relevantes": [
+      "historial OT-25-0043"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "cer-horas",
+    "pregunta": "un cierre de Servipat donde declararon más horas que las del registro de ingreso",
+    "tipo": "certificacion",
+    "relevantes": [
+      "CERT-EJ §2.2",
+      "CERT-EJ §2.11"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "cer-sellos",
+    "pregunta": "certificación con un juego de sellos de cárter que no estaba en la orden",
+    "tipo": "certificacion",
+    "relevantes": [
+      "CERT-EJ §2.3",
+      "CERT-EJ §2.12"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "cer-movilizacion",
+    "pregunta": "ejemplo de cierre donde la contratista cobró movilización que no correspondía",
+    "tipo": "certificacion",
+    "relevantes": [
+      "CERT-EJ §2.5"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "cer-lista",
+    "pregunta": "trabajo de 2024 certificado con la lista de precios vieja",
+    "tipo": "certificacion",
+    "relevantes": [
+      "CERT-EJ §2.1"
+    ],
+    "distractores": []
+  },
+  {
+    "id": "cer-recargo",
+    "pregunta": "contratista que cobró recargo de horas extra sin corresponder",
+    "tipo": "certificacion",
+    "relevantes": [
+      "CERT-EJ §2.8"
+    ],
+    "distractores": []
+  }
+]

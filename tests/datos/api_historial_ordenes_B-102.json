@@ -1,0 +1,198 @@
+[
+ {
+  "id": "OT-26-0073",
+  "fecha_aviso": "2026-08-13T16:20-03:00",
+  "fecha_inicio": "2026-08-14T18:20-03:00",
+  "fecha_cierre": "2026-08-14T20:20-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "I-VAL"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Rubén Catriel",
+  "tecnico": "Lucas Ferreyra",
+  "aviso": "dispro de la dos x vibracion, no rearmar hasta revisar",
+  "trabajo_realizado": "se revisaron valvulas, ok. se rearmo y quedo normal",
+  "repuestos": [],
+  "horas": 2.0,
+  "codigo_falla": null,
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-08-13T16:20-03:00"
+ },
+ {
+  "id": "OT-26-0079",
+  "fecha_aviso": "2026-09-02T20:30-03:00",
+  "fecha_inicio": "2026-09-03T01:30-03:00",
+  "fecha_cierre": "2026-09-03T03:30-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "T-B-COR"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Rubén Catriel",
+  "tecnico": "Nahuel Antieco",
+  "aviso": "la dos correas flojas, polea caliente",
+  "trabajo_realizado": "cbio de juego de correas completo. flecha ok 13mm",
+  "repuestos": [
+   {
+    "codigo": "COR-5V-1800",
+    "cantidad": 4
+   }
+  ],
+  "horas": 2.0,
+  "codigo_falla": null,
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-09-02T20:30-03:00"
+ },
+ {
+  "id": "OT-26-0082",
+  "fecha_aviso": "2026-09-16T16:50-03:00",
+  "fecha_inicio": "2026-09-18T16:50-03:00",
+  "fecha_cierre": "2026-09-18T20:50-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "T-B-EMP"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Matías Huichaqueo",
+  "tecnico": "Lucas Ferreyra",
+  "aviso": "bba 2 empauqetadura pierde, charco abajo del cabezal",
+  "trabajo_realizado": "empaquetadura nueva. se dejo goteando y se ajusto. ok sin perdida",
+  "repuestos": [
+   {
+    "codigo": "TX-EMP-KIT",
+    "cantidad": 1
+   }
+  ],
+  "horas": 4.0,
+  "codigo_falla": "F01",
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-09-16T16:50-03:00"
+ },
+ {
+  "id": "OT-26-0084",
+  "fecha_aviso": "2026-09-23T16:40-03:00",
+  "fecha_inicio": "2026-09-23T17:40-03:00",
+  "fecha_cierre": "2026-09-23T20:10-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "T-B-COR"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Héctor Llancafil",
+  "tecnico": "Lucas Ferreyra",
+  "aviso": "caudal de bomba 2 bajo y motor caliente, chilla",
+  "trabajo_realizado": "cbio de juego de correas completo. flecha ok 13mm",
+  "repuestos": [
+   {
+    "codigo": "COR-5V-1800",
+    "cantidad": 4
+   }
+  ],
+  "horas": 2.5,
+  "codigo_falla": "F05",
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-09-23T16:40-03:00"
+ },
+ {
+  "id": "OT-26-0085",
+  "fecha_aviso": "2026-09-28T09:10-03:00",
+  "fecha_inicio": "2026-09-28T12:10-03:00",
+  "fecha_cierre": "2026-09-28T12:40-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "T-B-ACE"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Matías Huichaqueo",
+  "tecnico": "Nahuel Antieco",
+  "aviso": "TEMP ACEITE B-102 EN 76 Y SUBIENDO DESPACIO, NIVEL BAJO",
+  "trabajo_realizado": "reposicion de aceite. 6 litros. temp bajando",
+  "repuestos": [
+   {
+    "codigo": "ACE-ISO220",
+    "cantidad": 8
+   }
+  ],
+  "horas": 0.5,
+  "codigo_falla": null,
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-09-28T09:10-03:00"
+ },
+ {
+  "id": "OT-26-0086",
+  "fecha_aviso": "2026-10-02T16:35-03:00",
+  "fecha_inicio": "2026-10-03T18:35-03:00",
+  "fecha_cierre": "2026-10-03T20:35-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "T-B-COR"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Héctor Llancafil",
+  "tecnico": "Lucas Ferreyra",
+  "aviso": "caudal de bomba 2 bajo y motor caliente, chilla",
+  "trabajo_realizado": "correas cuarteadas, se cambio el juego de 4. se reviso polea ok",
+  "repuestos": [
+   {
+    "codigo": "COR-5V-1800",
+    "cantidad": 4
+   }
+  ],
+  "horas": 2.0,
+  "codigo_falla": null,
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-10-02T16:35-03:00"
+ },
+ {
+  "id": "OT-26-0087",
+  "fecha_aviso": "2026-10-06T11:20-03:00",
+  "fecha_inicio": "2026-10-06T13:20-03:00",
+  "fecha_cierre": "2026-10-06T18:20-03:00",
+  "equipo": "B-102",
+  "tipo": "correctiva",
+  "tareas": [
+   "T-B-VAL"
+  ],
+  "ejecutor": "propio",
+  "solicitante": "Rubén Catriel",
+  "tecnico": "Nahuel Antieco",
+  "aviso": "bomba 2 golpea, manometro oscila mucho",
+  "trabajo_realizado": "cbio de valvulas las 6. asientos marcados. se ajusto tapas a torque. vib ok",
+  "repuestos": [
+   {
+    "codigo": "TX-VAL-KIT",
+    "cantidad": 1
+   }
+  ],
+  "horas": 5.0,
+  "codigo_falla": null,
+  "estado": "Cerrada",
+  "origen": "archivo",
+  "fecha": "2026-10-06T11:20-03:00"
+ },
+ {
+  "id": "OT-H-0003",
+  "fecha": "2026-11-06T19:09:00-03:00",
+  "equipo": "B-102",
+  "tareas": [
+   "T-B-EMP"
+  ],
+  "ejecutor": "propio",
+  "descripcion": "Corrección de falla F01",
+  "estado": "Cerrada",
+  "origen": "simulador"
+ }
+]

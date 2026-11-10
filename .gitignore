@@ -1,0 +1,13 @@
+# Investigación y material del curso: no se versiona (ver .local/entregables.md)
+.local/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+
+# Entorno
+.env

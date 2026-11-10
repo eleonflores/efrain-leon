@@ -1,0 +1,35 @@
+[project]
+name = "efrain-leon"
+version = "0.1.0"
+description = "Sistema agéntico para la planta de inyección PIA-3 (TP Academia Novit 2026)"
+requires-python = ">=3.11"
+dependencies = [
+    "planta-contrato @ git+https://github.com/NovitSoftware/academia2026-tp@ab65b95e911731351dba395817a74a8cc60da2b2#subdirectory=contrato",
+    "pydantic>=2.7",
+    "aiomqtt>=2.3",
+    "httpx>=0.27",
+    "pyyaml>=6",
+    "numpy>=1.26",
+    "psycopg[binary]>=3.2",
+    "pgvector>=0.3",
+    "langchain-core>=0.3",
+    "langchain-ollama>=0.3",
+]
+
+[project.optional-dependencies]
+stt = ["faster-whisper>=1.1", "soundfile>=0.12"]
+mcp = ["mcp>=2.3,<3", "uvicorn>=0.30"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "respx>=0.21", "mcp>=2.3,<3"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
