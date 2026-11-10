@@ -11,3 +11,7 @@ build/
 
 # Entorno
 .env
+
+# Embeddings de los modelos descartados (se regeneran con sistema.rag.indexar --precalcular)
+datos/documentos/embeddings_minilm-l12.npz
+datos/documentos/embeddings_jina-es-int8.npz

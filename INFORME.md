@@ -13,7 +13,7 @@
 | RAM | 24 GB |
 | GPU | Intel Iris Xe integrada (no se usa); sin GPU dedicada |
 | Sistema | Windows 11 Pro, Docker Desktop 29.8.2 (WSL2), Compose v5.6.0 |
-| Límites por contenedor | sistema 2 CPU / 2,5 GB · ollama 1,5 CPU / 4 GB · db 0,25 / 0,75 GB · herramientas 0,25 / 0,5 GB |
+| Límites por contenedor | sistema 2 CPU / 2,5 GB · ollama 1,5 CPU / 3,75 GB · db 0,25 / 0,75 GB · herramientas 0,25 / 0,75 GB |
 
 Las mediciones se hicieron con los mismos límites de CPU que en producción (`--cpus=2` para la transcripción y el
 LLM) y con la planta simulada corriendo en la misma máquina, así que son conservadoras.
@@ -24,7 +24,7 @@ LLM) y con la planta simulada corriendo en la misma máquina, así que son conse
 | --- | --- | --- | --- | --- | --- |
 | Transcripción de notas de voz | **Whisper small**, conversión CTranslate2 (`Systran/faster-whisper-small`), int8 | OpenAI (modelo), SYSTRAN (faster-whisper) | faster-whisper 1.2.1, CTranslate2 4.8.5 | 244 M | `sistema`, 2 hilos |
 | Extracción del parte (respaldo de las reglas) | **Qwen3.5 2B** (`qwen3.5:2b` de Ollama) | Alibaba Cloud · Qwen | Ollama 0.40.16, imagen `ollama/ollama:0.40.16` | 2 B (2,7 GB en disco) | `ollama`, 2 hilos |
-| Embeddings para el RAG | ver [evaluacion/rag/](evaluacion/rag/README.md) | | | | `sistema` |
+| Embeddings para el RAG | **multilingual-e5-small** (`intfloat/multilingual-e5-small`, ONNX int8 de `Xenova/multilingual-e5-small`) | Microsoft (intfloat) | fastembed 0.9.1, onnxruntime 1.31.1 | 118 M, 384 dim. | `herramientas` (consultas); el corpus viene precalculado |
 | Detección de condiciones inseguras | Ninguno: reglas (`procesamiento/seguridad.py`) | — | — | — | `sistema` |
 | Detección SinNovedad / Escalado | Ninguno: código determinístico (`dominio/deteccion.py`) | — | — | — | `sistema` |
 | Comprensión de las respuestas del operador | Reglas para las formas conocidas | — | — | — | `sistema` |
@@ -39,9 +39,13 @@ simulador, 2 CPU por modelo ([evaluacion/stt/](evaluacion/stt/)):
 
 | Modelo | Error por palabra | Notas con todos los números bien | Latencia p50 / p95 por nota | RAM pico |
 | --- | ---: | ---: | ---: | ---: |
-| **Whisper small int8** | **6,5 %** | **98 %** | 3,6 s / 5,8 s | 1,15 GB |
+| **Whisper small int8 + prompt de la planta (producción)** | **1,2 %** | **97 %** | 3,7 s / 6,3 s | 0,9 GB |
+| Whisper small int8, prompt inicial | 6,5 % | 98 % | 3,6 s / 5,8 s | 1,15 GB |
 | Parakeet TDT 0.6B v3 int8 (NVIDIA, ONNX local) | 7,6 % | 54 % | 1,9 s / 3,7 s | 1,8 GB |
 | Whisper large-v3-turbo int8 | — | — | > 20 s por nota (medición cortada) | — |
+
+El prompt de producción le da a Whisper el vocabulario y la forma de dictar de la planta ("La dos está en mil
+seiscientos psi de descarga. El filtro B me dio uno ocho de diferencial."): el error por palabra bajó de 6,5 % a 1,2 %.
 
 Whisper small es el que mejor transcribe lo que puntúa (números, equipos, unidades) y entra holgado en los 30 s que
 tiene la alerta de seguridad: en `fuga-sin-enlace` la alerta salió 10,9 s después de la nota, con el audio bajado,
@@ -50,6 +54,21 @@ kilograms") y junta los diferenciales ("uno dos" → 12). Turbo es más preciso 
 alerta puede esperar en 2 CPU.
 
 Consumo: la transcripción no usa tokens; ~3,6 s de CPU por nota de 10 s de audio.
+
+## Embeddings: cómo se eligió
+
+Tres modelos multilingües chicos en CPU, medidos con la suite de 71 preguntas de Novit y su evaluador, dentro de la
+búsqueda híbrida (semántica + léxica con filtros de vigencia) ([evaluacion/rag/](evaluacion/rag/README.md)):
+
+| Modelo | hit@5 | recall@5 | MRR | RAM del modelo | Consulta |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| BM25 de Novit (línea de base, sin modelo) | 0,845 | 0,664 | 0,573 | — | — |
+| **multilingual-e5-small int8** | **0,859** | **0,742** | **0,718** | ~420 MB | 5 ms (43 ms la búsqueda completa) |
+| jina-embeddings-v2-base-es int8 | 0,831 | 0,709 | 0,674 | mayor (768 dim.) | más lenta |
+| paraphrase-multilingual-MiniLM-L12-v2 | 0,817 | 0,667 | 0,661 | ~570 MB | — |
+
+e5-small es el mejor en las tres métricas, el más chico y el más rápido. Los vectores de los 701 fragmentos se
+calculan una vez y viajan en el repo; en runtime el modelo solo embebe la consulta. Consumo: sin tokens de LLM.
 
 ## LLM: cómo se eligió y por qué es respaldo
 

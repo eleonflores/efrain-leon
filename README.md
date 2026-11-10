@@ -34,8 +34,8 @@ y el LLM en la de Ollama. La red de planta no tiene internet y los volúmenes se
 
 | Qué | Dónde |
 | --- | --- |
-| Visor de la planta (3D / 2D) | http://localhost:8080 · http://localhost:8081 (`?instructor` para el panel) |
-| API de la planta | http://localhost:8100/docs |
+| Visor de la planta (3D / 2D) | <http://localhost:8080> · <http://localhost:8081> (`?instructor` para el panel) |
+| API de la planta | <http://localhost:8100/docs> |
 | Logs del sistema | `docker compose logs -f sistema` |
 | Servidor MCP | `http://herramientas:8001/mcp` dentro de `planta-lan` (no se publica fuera de Docker) |
 
@@ -54,7 +54,7 @@ Variables principales (todas con valor por defecto en `docker-compose.yml`): `LL
 | `nube` | Fuera de la planta | Recibe lo escalado. Solo se la alcanza por el proxy `enlace:3128`: cuando el enlace se cae, la planta acumula pendientes y los sincroniza en orden al volver. En la Entrega 2 corre acá el análisis de la anomalía |
 
 Los servicios de planta van solo en `planta-lan`, con el label `academia.planta: pc` y límites que suman **4 CPU y
-8 GB** (sistema 2 CPU / 2,5 GB, ollama 1,5 / 4 GB, db 0,25 / 0,75 GB, herramientas 0,25 / 0,5 GB). Salen a internet
+8 GB** (sistema 2 CPU / 2,5 GB, ollama 1,5 / 3,75 GB, db 0,25 / 0,75 GB, herramientas 0,25 / 0,75 GB). Salen a internet
 por `HTTP(S)_PROXY=http://enlace:3128`. Además de `broker,sim,localhost`, `NO_PROXY` incluye los servicios propios de
 la planta (`db,ollama,herramientas`): sin eso, el LLM local saldría por el enlace y dejaría de andar cuando se cae.
 
@@ -116,8 +116,14 @@ estado, `python -m sistema.herramientas.servidor_mcp`, `:8001/mcp`) con las anno
 
 Ver [docs/rag.md](docs/rag.md): fragmentos por sección con metadatos (equipo, fabricante, documento, sección, cita,
 vigente), búsqueda híbrida en pgvector con filtros de vigencia y aplicabilidad, y la justificación de qué va por RAG y
-qué por API o SQL (límites y stock nunca salen del RAG). Resultados contra la línea de base BM25 de Novit en
-[evaluacion/rag/](evaluacion/rag/README.md).
+qué por API o SQL (límites y stock nunca salen del RAG). Contra la línea de base BM25 de Novit (71 preguntas):
+
+| | hit@5 | recall@5 | MRR | Rev. C en el top 5 |
+| --- | ---: | ---: | ---: | ---: |
+| BM25 de Novit | 0,845 | 0,664 | 0,573 | 42 preguntas |
+| **Híbrida (multilingual-e5-small + léxica, con filtros)** | **0,859** | **0,742** | **0,718** | **0** |
+
+Detalle y ablaciones en [evaluacion/rag/](evaluacion/rag/README.md).
 
 ## Pruebas y evaluación
 

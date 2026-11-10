@@ -12,6 +12,7 @@ import time
 from dataclasses import dataclass, field
 from typing import TypeVar
 
+import httpx
 from langchain_ollama import ChatOllama
 from pydantic import BaseModel
 
@@ -50,11 +51,20 @@ class Presupuesto:
 class ModeloLocal:
     def __init__(self, url: str, modelo: str, num_ctx: int = 4096, num_predict: int = 700, hilos: int | None = None,
                  timeout_s: float = 90):
-        self.nombre = modelo
+        self.nombre, self.url = modelo, url.rstrip("/")
         self.timeout_s = timeout_s
         self.chat = ChatOllama(model=modelo, base_url=url, temperature=0, reasoning=False, num_ctx=num_ctx,
                                num_predict=num_predict, num_thread=hilos, keep_alive="24h")
         self._turno = asyncio.Semaphore(1)       # CPU de planta: un llamado por vez
+
+    async def cargar(self) -> float:
+        """Deja el modelo en memoria sin generar nada (casi no usa CPU). Un calentamiento con inferencia ocupaba la
+        CPU 45 s justo cuando llega la primera nota y demoraba la transcripción de la alerta de seguridad."""
+        t0 = time.perf_counter()
+        async with httpx.AsyncClient(trust_env=False, timeout=180) as http:
+            r = await http.post(f"{self.url}/api/generate", json={"model": self.nombre, "keep_alive": "24h"})
+            r.raise_for_status()
+        return time.perf_counter() - t0
 
     async def estructurado(self, instrucciones: str, entrada: str, esquema: type[T], etapa: str,
                            presupuesto: Presupuesto | None = None) -> tuple[T | None, Paso]:

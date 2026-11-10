@@ -21,7 +21,8 @@ docker run --rm --cpus=2 --memory=4g -v stt-cache:/cache \
 
 | Modelo | Error por palabra | Notas con números bien | Recall de números | p50 / p95 | RAM |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| **Whisper small int8** (faster-whisper) | 6,5 % | **98,0 %** | 99,5 % | 3,6 s / 5,8 s | 1,15 GB |
+| **Whisper small int8, prompt de producción** | **1,2 %** | 97,1 % | — | 3,7 s / 6,3 s | 0,9 GB |
+| Whisper small int8 (faster-whisper), prompt inicial | 6,5 % | **98,0 %** | 99,5 % | 3,6 s / 5,8 s | 1,15 GB |
 | Parakeet TDT 0.6B v3 int8 (onnx-asr) | 7,6 % | 53,9 % | 96,7 % | 1,9 s / 3,7 s | 1,8 GB |
 | Whisper large-v3-turbo int8 | — | — | — | > 20 s por nota | — |
 

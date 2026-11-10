@@ -31,8 +31,6 @@ from sistema.procesamiento.numeros import extraer_numeros, normalizar_numeros, s
 
 SR = 16000
 from sistema.procesamiento.stt import PROMPT  # el mismo prompt que usa el sistema
-_PROMPT_VIEJO = ("Recorrida de la planta de inyección: la uno, la dos, la tres, el filtro A, el filtro B, el pulmón. "
-          "Descarga en kilos, psi o bar; diferencial; empaquetadura; rodamiento; correas.")
 
 
 def normalizar(texto: str) -> str:

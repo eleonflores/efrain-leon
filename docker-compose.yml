@@ -56,7 +56,7 @@ services:
         LLM_MODELO: ${LLM_MODELO:-qwen3.5:2b}
     deploy:
       resources:
-        limits: {cpus: "1.5", memory: 4096m}
+        limits: {cpus: "1.5", memory: 3840m}
 
   db:
     <<: *planta
@@ -78,9 +78,10 @@ services:
     environment:
       <<: *entorno
       MCP_PUERTO: "8001"
+      RAG_HILOS: "1"
     deploy:
       resources:
-        limits: {cpus: "0.25", memory: 512m}
+        limits: {cpus: "0.25", memory: 768m}
 
   nube:
     build: .

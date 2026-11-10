@@ -868,9 +868,9 @@
    "problemas": [
     {
      "tipo": "equipo",
-     "tag": "B-102",
-     "mostrado": "B-101",
-     "valor": 1610.0
+     "tag": "B-101",
+     "mostrado": "B-102",
+     "valor": 113.0
     }
    ],
    "b1_esperado": {
@@ -878,7 +878,7 @@
     "B-102": false
    },
    "b1_nuestro": {
-    "B-101": true
+    "B-102": true
    },
    "filas": [
     [

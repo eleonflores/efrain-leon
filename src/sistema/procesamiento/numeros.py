@@ -31,7 +31,8 @@ CENTENAS = {"cien": 100, "ciento": 100, "doscientos": 200, "trescientos": 300, "
 SEPARADOR_DECIMAL = {"coma", "con", "punto"}
 UNIDADES_FISICAS = {"grado", "grados", "kilo", "kilos", "kilogramo", "kilogramos", "metro", "metros", "bar",
                     "bares", "psi", "libra", "libras", "gota", "gotas"}
-NOMBRE_DE_EQUIPO = {"la", "bomba"}          # "la dos", "bomba tres": se quedan en palabras
+# "la dos", "bomba tres": se quedan en palabras. "a uno" y "las dos" son "la uno" y "la dos" mal transcriptos.
+NOMBRE_DE_EQUIPO = {"la", "bomba", "las", "a"}
 _TOKEN = re.compile(r"\d+(?:[.,]\d+)*|[^\W\d_]+|\s+|.", re.UNICODE)
 
 
@@ -134,10 +135,21 @@ class _Lector:
                 self.i += 1
                 continue
             valor, fin, palabras = leido
+            valor, fin = self._mezcla_con_digitos(valor, fin)
             valor, fin = self._decimal(float(valor), fin, palabras, era_digito=False)
             salida.append(_formatear(valor))
             self.i = fin
         return "".join(salida)
+
+    def _mezcla_con_digitos(self, valor: int, fin: int) -> tuple[int, int]:
+        """La transcripción a veces mezcla: "mil seiscientos 20" es 1620, no 1600 y 20."""
+        k = self._siguiente_palabra(fin)
+        if k is None or not self.tokens[k].isdigit():
+            return valor, fin
+        resto = int(self.tokens[k])
+        if (valor >= 1000 and valor % 1000 == 0 and resto < 1000) or (valor >= 100 and valor % 100 == 0 and resto < 100):
+            return valor + resto, k + 1
+        return valor, fin
 
     def _cuenta_como_numero(self, c: str) -> bool:
         anterior = self._palabra_anterior()

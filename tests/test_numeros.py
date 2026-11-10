@@ -29,6 +29,9 @@ from sistema.procesamiento.numeros import extraer_numeros, normalizar_numeros
         # Lo que devuelve la transcripción en dígitos
         ("La 2 está en 1.640 psi", "La dos está en 1640 psi"),
         ("bomba 3 parada", "bomba tres parada"),
+        # La transcripción a veces se come la "l" (vista en una corrida del corrector)
+        ("A uno estar en ciento doce kilogramos de descarga", "A uno estar en 112 kilogramos de descarga"),
+        ("Las dos está en 1640 libras", "Las dos está en 1640 libras"),
         ("me dio 1,8 de diferencial", "me dio 1.8 de diferencial"),
         ("me dio 1.8 de diferencial", "me dio 1.8 de diferencial"),
         ("está en 112 de descarga", "está en 112 de descarga"),

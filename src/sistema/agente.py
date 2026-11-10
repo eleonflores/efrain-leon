@@ -90,6 +90,7 @@ class Sistema:
         """Lo lento va después del primer latido: el corrector espera el latido para soltar el reloj."""
         await self.db.conectar()
         self.db_lista = True
+        self._lanzar(self._indice_rag())
         definicion = await self._definicion()
         self.planta = Planta.desde_definicion(definicion)
         self.monitor = MonitorSensores(self.planta)
@@ -97,9 +98,18 @@ class Sistema:
         log.info("Transcripción lista: %s", self.transcriptor.nombre)
         self.listo.set()
         await self.restaurar()
-        _, paso = await self.llm.estructurado(INSTRUCCIONES, "<nota>La uno está en 110 de descarga.</nota>", Dictado,
-                                              "calentamiento")
-        log.info("LLM %s listo en %.1f s", self.llm.nombre, paso.duracion_ms / 1000)
+        try:
+            log.info("LLM %s cargado en %.1f s", self.llm.nombre, await self.llm.cargar())
+        except httpx.HTTPError as e:
+            log.warning("No se pudo cargar el LLM %s (%s): la extracción sigue por reglas", self.llm.nombre, e)
+
+    async def _indice_rag(self) -> None:
+        """Deja cargado el índice de manuales en pgvector (vectores precalculados en la imagen: tarda segundos)."""
+        from sistema.rag.indice import asegurar_indice
+        try:
+            log.info("Índice RAG: %s", await asegurar_indice(self.cfg.database_url))
+        except Exception:  # noqa: BLE001  el RAG no es parte del camino crítico de la Entrega 1
+            log.exception("No se pudo cargar el índice RAG")
 
     async def _definicion(self) -> dict:
         while True:                      # la planta puede tardar en arrancar: se espera sin límite
@@ -366,13 +376,14 @@ class Sistema:
         tag = equipos[0] if equipos else None
         codigos = ", ".join(c.codigo for c in condiciones)
         texto = seguridad.mensaje_emergencia(condiciones, dialogo.nombre_de(self.planta, tag) if tag else None)
-        await self.tablet(estado, f"TAB-{estado.id}-SEG", texto, titulo="ALERTA DE SEGURIDAD", espera=False,
-                          filas=[{"tag": tag or "PLANTA", "variable": "condicion_insegura", "valor": None,
-                                  "unidad": None, "observacion": estado.transcripcion[:200]}])
+        # Primero la alerta (es la que no puede faltar), enseguida el aviso al operador; lo demás, después.
         evento = EventoSistema(id=f"EV-{estado.id}-SEG", ts=datetime.fromisoformat(estado.nota["ts"]),
                                tipo="AlertaSeguridad", equipo=tag, origen="parte", parte_id=estado.id,
                                nota_ids=[estado.id], resumen=f"{codigos}: " + "; ".join(c.descripcion for c in condiciones))
         self.bus.publicar(Topicos.EVENTOS, evento)
+        await self.tablet(estado, f"TAB-{estado.id}-SEG", texto, titulo="ALERTA DE SEGURIDAD", espera=False,
+                          filas=[{"tag": tag or "PLANTA", "variable": "condicion_insegura", "valor": None,
+                                  "unidad": None, "observacion": estado.transcripcion[:200]}])
         log.warning("ALERTA DE SEGURIDAD %s en nota %s (%s)", codigos, estado.id, tag)
         await self.db.guardar_evento(evento.model_dump(mode="json"), {"evidencia": [c.evidencia for c in condiciones]})
         self.latir_ya.set()

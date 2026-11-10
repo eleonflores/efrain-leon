@@ -110,9 +110,9 @@ Sin reranker: un cross-encoder multilingüe chico (mMiniLM, ~120 M parámetros) 
 
 El corrector borra los volúmenes entre escenarios y la red de planta no tiene internet:
 
-1. **Al construir la imagen**, `python -m sistema.rag.indexar --precalcular` descarga el modelo al cache de fastembed
-   (`FASTEMBED_CACHE_PATH`) y deja `datos/documentos/embeddings_e5-small-int8.npz` (citas, vectores, modelo y huella
-   del corpus).
+1. **En el repo** van los vectores del corpus ya calculados, `datos/documentos/embeddings_e5-small-int8.npz` (citas,
+   vectores, modelo y huella del corpus), generados con `python -m sistema.rag.indexar --precalcular`. **Al construir
+   la imagen** solo se descarga el modelo al cache de fastembed (`FASTEMBED_CACHE_PATH`), para embeber las consultas.
 2. **Al arrancar**, `await asegurar_indice(conexion)` mira `rag_meta`: si la base ya tiene este corpus con este
    modelo no hace nada; si no, en una transacción con `pg_advisory_xact_lock` (el sistema y el servidor MCP pueden
    arrancar a la vez) crea la configuración de texto, la tabla, copia las 701 filas con `COPY`, calcula las
@@ -132,3 +132,20 @@ carga sin vectores y la búsqueda sigue solo léxica (`modo: "lexica"` en la sal
 | `RAG_HILOS` | `2` | Hilos de onnxruntime |
 | `FASTEMBED_CACHE_PATH` | `$HF_HOME/../fastembed` | Dónde está el modelo (en la imagen, `/modelos/fastembed`) |
 | `DOCUMENTOS_PATH` | `datos/documentos` del repo o `/app/datos/documentos` | Corpus y vectores precalculados |
+
+## Resultados
+
+Suite de Novit (71 preguntas, `corpus.evaluar.evaluar`), 701 fragmentos, 2 hilos, PC de trabajo. Detalle y
+ablaciones en [evaluacion/rag/](../evaluacion/rag/README.md).
+
+| Configuración | hit@5 | recall@5 | MRR | distractor@5 | Rev. C en el top 5 | Latencia por consulta |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| BM25 de Novit (línea de base) | 0,845 | 0,664 | 0,573 | 0,099 | 42 | — |
+| **Híbrida, e5-small-int8 (elegida)** | **0,859** | **0,742** | **0,718** | **0,014** | **0** | 43 ms |
+| Solo vectores, e5-small-int8 | 0,817 | 0,667 | 0,631 | 0,000 | 0 | 6 ms |
+| Solo léxica (con filtros) | 0,817 | 0,669 | 0,676 | 0,014 | 0 | 63 ms |
+| Híbrida sin filtros de vigencia y aplicabilidad | 0,845 | 0,704 | 0,637 | 0,099 | 36 | 58 ms |
+
+Los filtros son los que eliminan la trampa de versiones: sin ellos la Rev. C aparece en el top 5 de 36 preguntas;
+con ellos, en ninguna. La combinación de las listas semántica y léxica es la que sube recall@5 y MRR por encima de
+cada una por separado.
