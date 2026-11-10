@@ -293,6 +293,7 @@ class Sistema:
             return await self.confirmar(estado)
         if i.tipo == "corrige":
             estado.filas = dialogo.aplicar(estado.filas, i.correcciones, self.planta)
+            await self.marcar_fuera_de_rango(estado.filas)
         if estado.intento >= self.cfg.max_intentos_borrador:
             return await self._abandonar(estado, f"sin confirmación después de {estado.intento} borradores")
         await self.avanzar(estado)

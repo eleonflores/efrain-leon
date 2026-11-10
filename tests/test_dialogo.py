@@ -52,6 +52,14 @@ def test_aplicar_correcciones(planta):
     assert (faltante[-1].tag, faltante[-1].variable, faltante[-1].valor) == ("B-102", "goteo_empaquetadura", 120)
 
 
+def test_una_correccion_borra_el_aviso_de_rango_del_valor_viejo(planta):
+    fila = FilaBorrador("B-101", "presion_descarga_local", 150, "kg/cm2",
+                        fuera_de_rango="150 kg/cm² está fuera del rango de los últimos 45 días")
+    i = interpretar("No. La uno estaba en ciento quince kilos, no en ciento cincuenta.", planta)
+    [corregida] = aplicar([fila], i.correcciones, planta)
+    assert (corregida.valor, corregida.fuera_de_rango) == (115, None)
+
+
 def test_el_goteo_dictado_sin_numero_se_completa_sin_pisar_la_temperatura(planta):
     filas = [FilaBorrador("B-102", "goteo_empaquetadura", None, "gotas/min", "pérdida importante por empaquetadura"),
              FilaBorrador("B-102", "temperatura_rodamiento_ir", 56, "degC")]

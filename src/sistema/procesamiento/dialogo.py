@@ -150,20 +150,20 @@ def aplicar(filas: list[FilaBorrador], correcciones: list[dict], planta: Planta)
                 f = next((f for f in con_valor if f.tag == tag and _cerca(f.valor, c["mostrado"])), None) \
                     or next((f for f in con_valor if f.tag == tag), None)
             if f:
-                f.valor, f.valor_dicho = c["valor"], None
+                f.valor, f.valor_dicho, f.fuera_de_rango = c["valor"], None, None
                 f.unidad = c["unidad"] or f.unidad
             else:
                 filas.append(_nueva(tag, c, planta))
         elif c["tipo"] == "equipo":
             f = next((f for f in con_valor if _cerca(f.valor, c["valor"]) and (c.get("desde") in (None, f.tag))), None)
             if f:
-                f.tag, f.candidatos = tag, []
+                f.tag, f.candidatos, f.fuera_de_rango = tag, [], None
                 if f.variable == "presion_descarga_local" and c["unidad"] is None:
                     f.unidad = planta.unidad_por_defecto(tag, f.variable)
         elif c["tipo"] == "unidad":
             f = next((f for f in con_valor if f.tag == tag), None)
             if f:
-                f.unidad = c["unidad"]
+                f.unidad, f.fuera_de_rango = c["unidad"], None
         elif c["tipo"] == "falta":
             f = _fila_de_la_unidad(filas, tag, c["unidad"], planta)
             if f is not None and f.valor is None:
