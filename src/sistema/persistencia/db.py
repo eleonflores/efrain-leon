@@ -160,8 +160,49 @@ class Base:
              duracion_ms, ok, _j(detalle)))
 
     async def consumo_por_modelo(self) -> list[dict]:
-        return await self._exec("SELECT modelo, sum(tokens_entrada)::int AS entrada, sum(tokens_salida)::int AS salida, "
-                                "sum(duracion_ms)::int AS ms FROM pasos WHERE modelo IS NOT NULL GROUP BY modelo")
+        """Tokens por modelo y el tiempo de las llamadas con salida: medido (`generacion_ms`) o estimado (duración)."""
+        return await self._exec(
+            """SELECT modelo, count(*)::int AS llamadas, sum(tokens_entrada)::int AS entrada,
+                      sum(tokens_salida)::int AS salida,
+                      coalesce(sum((detalle->>'generacion_ms')::int) FILTER (WHERE tokens_salida > 0), 0)::int
+                          AS generacion_ms,
+                      coalesce(sum(duracion_ms) FILTER (WHERE tokens_salida > 0 AND detalle->>'generacion_ms' IS NULL),
+                               0)::int AS estimado_ms
+               FROM pasos WHERE modelo IS NOT NULL GROUP BY modelo ORDER BY min(id)""")
+
+    async def estadisticas(self) -> dict:
+        """Lo que muestra `python -m sistema.metricas`."""
+        demora = """SELECT count(*)::int AS n, percentile_cont(0.5) WITHIN GROUP (ORDER BY duracion_ms) / 1000 AS p50,
+                           percentile_cont(0.95) WITHIN GROUP (ORDER BY duracion_ms) / 1000 AS p95,
+                           max(duracion_ms) / 1000.0 AS max
+                    FROM pasos WHERE etapa = 'primer_mensaje' AND argumentos->>'mensaje_id' ~ %s"""
+        return {
+            "notas": await self._exec("SELECT fase, count(*)::int AS n FROM notas GROUP BY fase ORDER BY n DESC"),
+            "a_la_tablet": (await self._exec(demora, (".",)))[0],
+            "a_la_alerta": (await self._exec(demora, ("-SEG$",)))[0],
+            "pasos": await self._exec(
+                """SELECT coalesce(modelo, herramienta) AS nombre, etapa, count(*)::int AS n,
+                          count(*) FILTER (WHERE NOT ok)::int AS fallas,
+                          count(*) FILTER (WHERE detalle->>'error' ~ '^TimeoutError')::int AS timeouts,
+                          percentile_cont(0.5) WITHIN GROUP (ORDER BY duracion_ms) AS p50_ms,
+                          percentile_cont(0.95) WITHIN GROUP (ORDER BY duracion_ms) AS p95_ms,
+                          percentile_cont(0.5) WITHIN GROUP (ORDER BY (detalle->>'audio_s')::float) AS audio_p50_s,
+                          sum((detalle->>'audio_s')::float) AS audio_s, sum(duracion_ms)::int AS ms
+                   FROM pasos WHERE etapa NOT IN ('abandono', 'primer_mensaje') GROUP BY 1, 2 ORDER BY min(id)"""),
+            "consumo": await self.consumo_por_modelo(),
+            "abandonos": await self._exec("SELECT detalle->>'motivo' AS motivo, count(*)::int AS n FROM pasos "
+                                          "WHERE etapa = 'abandono' GROUP BY 1 ORDER BY n DESC"),
+            "dialogo": (await self._exec(
+                """SELECT count(*) FILTER (WHERE n.fase = 'confirmada')::int AS confirmadas,
+                          count(*) FILTER (WHERE n.fase = 'confirmada' AND m.borradores = 1)::int AS al_primero,
+                          coalesce(sum(m.preguntas), 0)::int AS preguntas,
+                          coalesce(sum(greatest(m.borradores - 1, 0)), 0)::int AS rehechos
+                   FROM notas n LEFT JOIN (SELECT nota_id, count(*) FILTER (WHERE id ~ '-B[0-9]+$') AS borradores,
+                                                  count(*) FILTER (WHERE id ~ '-P[0-9]+$') AS preguntas
+                                           FROM mensajes_tablet GROUP BY nota_id) m ON m.nota_id = n.id"""))[0],
+            "cola": (await self._exec("SELECT count(enviado)::int AS enviados, "
+                                      "(count(*) - count(enviado))::int AS pendientes FROM salida_nube"))[0],
+        }
 
     async def encolar(self, id_: str, tipo: str, payload: dict) -> None:
         await self._exec("INSERT INTO salida_nube (id, tipo, payload) VALUES (%s, %s, %s) ON CONFLICT (id) DO NOTHING",

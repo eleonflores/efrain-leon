@@ -37,13 +37,14 @@ def wav_a_audio(contenido: bytes) -> np.ndarray:
 class Transcriptor:
     nombre: str
 
-    def transcribir(self, audio: np.ndarray) -> str:
+    def transcribir(self, audio: np.ndarray) -> tuple[str, int]:
+        """(texto, tokens generados)."""
         raise NotImplementedError
 
-    async def transcribir_async(self, audio: np.ndarray) -> tuple[str, float]:
+    async def transcribir_async(self, audio: np.ndarray) -> tuple[str, int, float]:
         t0 = time.perf_counter()
-        texto = await asyncio.to_thread(self.transcribir, audio)
-        return texto.strip(), time.perf_counter() - t0
+        texto, tokens = await asyncio.to_thread(self.transcribir, audio)
+        return texto.strip(), tokens, time.perf_counter() - t0
 
 
 class Whisper(Transcriptor):
@@ -53,10 +54,11 @@ class Whisper(Transcriptor):
         self.nombre = f"faster-whisper {tamano} int8"
         self.modelo = WhisperModel(tamano, device="cpu", compute_type="int8", cpu_threads=hilos)
 
-    def transcribir(self, audio: np.ndarray) -> str:
+    def transcribir(self, audio: np.ndarray) -> tuple[str, int]:
         segmentos, _ = self.modelo.transcribe(audio, language="es", beam_size=5, vad_filter=False,
                                               initial_prompt=PROMPT, condition_on_previous_text=False)
-        return " ".join(s.text.strip() for s in segmentos)
+        segmentos = list(segmentos)
+        return " ".join(s.text.strip() for s in segmentos), sum(len(s.tokens) for s in segmentos)
 
 
 class Parakeet(Transcriptor):
@@ -69,8 +71,8 @@ class Parakeet(Transcriptor):
         opciones.intra_op_num_threads = hilos
         self.modelo = onnx_asr.load_model("nemo-parakeet-tdt-0.6b-v3", quantization="int8", sess_options=opciones)
 
-    def transcribir(self, audio: np.ndarray) -> str:
-        return self.modelo.recognize(audio, sample_rate=SR)
+    def transcribir(self, audio: np.ndarray) -> tuple[str, int]:
+        return self.modelo.recognize(audio, sample_rate=SR), 0
 
 
 def crear(modelo: str, hilos: int) -> Transcriptor:

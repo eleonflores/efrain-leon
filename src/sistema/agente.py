@@ -12,6 +12,7 @@ import httpx
 from planta_contrato import (EstadoSistema, EventoSistema, FilaParte, LecturaSensor, MensajeTablet, NotaRecorrida,
                              Pantalla, RespuestaOperador, Topicos)
 
+from sistema import metricas
 from sistema.config import CONFIG, Config
 from sistema.dominio.deteccion import BOMBA_PARADA_KG, Decision, MonitorSensores, evaluar_parte
 from sistema.dominio.planta import A_KG, SENSOR_DE_LECTURA, Planta
@@ -24,6 +25,7 @@ from sistema.procesamiento import dialogo, reglas_parte, seguridad, stt
 from sistema.procesamiento.parte import INSTRUCCIONES, Dictado, FilaBorrador, armar_borrador, preparar_texto
 
 log = logging.getLogger("sistema")
+METRICAS_S = 10        # el visor da por vencidas las métricas a los 30 s
 SENSORES_DE_TENDENCIA = {"bomba": ["presion_descarga", "vibracion", "temperatura_aceite", "presion_succion"],
                          "filtro": ["presion_diferencial"], "caudalimetro": ["caudal"], "tanque": []}
 
@@ -37,6 +39,8 @@ class EstadoNota:
     intento: int = 0               # borradores mostrados
     preguntas: int = 0
     presupuesto: Presupuesto | None = None
+    t0: float = field(default_factory=time.perf_counter)
+    respondida: bool = False
 
     @property
     def id(self) -> str:
@@ -70,7 +74,7 @@ class Sistema:
 
     async def correr(self) -> None:
         tareas = [self.bus.correr(self.recibir, ["planta/#"]), self.latido(), self.enlace.correr(), self.preparar(),
-                  self.sincronizar_nube()]
+                  self.sincronizar_nube(), self.publicar_metricas()]
         await asyncio.gather(*tareas)
 
     async def preparar(self) -> None:
@@ -173,12 +177,14 @@ class Sistema:
         r.raise_for_status()
         audio = stt.wav_a_audio(r.content)
         async with self._turno_stt:
-            texto, dur = await self.transcriptor.transcribir_async(audio)
+            texto, tokens, dur = await self.transcriptor.transcribir_async(audio)
         estado.transcripcion, estado.fase = texto, "transcrita"
         log.info("Nota %s (%.1f s de audio, %.1f s): %s", estado.id, len(audio) / stt.SR, dur, texto)
         await self.db.actualizar_nota(estado.id, transcripcion=texto, fase="transcrita")
-        await self.db.registrar_paso(estado.id, "transcripcion", modelo=self.transcriptor.nombre,
-                                     duracion_ms=int(dur * 1000), detalle={"audio_s": round(len(audio) / stt.SR, 1)})
+        ms = int(dur * 1000)
+        await self.db.registrar_paso(estado.id, "transcripcion", modelo=self.transcriptor.nombre, tokens_salida=tokens,
+                                     duracion_ms=ms, detalle={"audio_s": round(len(audio) / stt.SR, 1),
+                                                              "generacion_ms": ms})
         return texto
 
     async def extraer(self, estado: EstadoNota) -> None:
@@ -268,6 +274,10 @@ class Sistema:
         self.mensaje_a_nota[mensaje_id] = estado.id
         self.bus.publicar(Topicos.TABLET, mensaje)
         await self.db.guardar_mensaje(estado.id, mensaje.model_dump(mode="json"))
+        if not estado.respondida:
+            estado.respondida = True
+            await self.db.registrar_paso(estado.id, "primer_mensaje", argumentos={"mensaje_id": mensaje_id},
+                                         duracion_ms=int((time.perf_counter() - estado.t0) * 1000))
 
     async def procesar_respuesta(self, r: RespuestaOperador) -> None:
         nota_id = self.mensaje_a_nota.get(r.mensaje_id) or await self.db.guardar_respuesta(r.mensaje_id, {})
@@ -388,27 +398,23 @@ class Sistema:
                 self._lanzar(self.procesar_nota(nota))
                 continue
             estado = EstadoNota(nota, n["transcripcion"] or "", [FilaBorrador(**f) for f in n["borrador"]],
-                                intento=n["intento"],
+                                intento=n["intento"], respondida=True,
                                 presupuesto=Presupuesto(self.cfg.max_pasos_llm_por_nota, self.cfg.max_tokens_por_nota))
             self.notas[estado.id] = estado
             log.info("Retomo la nota %s (%s)", estado.id, n["fase"])
             await self.avanzar(estado)
 
     async def latido(self) -> None:
-        vuelta = 0
         while True:
             pendientes = 0
             if self.db_lista:
                 try:
                     pendientes = await self.db.cantidad_pendientes()
-                    if vuelta % 2 == 0:
-                        await self.publicar_consumo()
                 except Exception:  # noqa: BLE001
                     log.exception("No pude leer la base para el latido")
             self.bus.publicar(Topicos.ESTADO, EstadoSistema(ts=self.ahora(), sistema=self.cfg.sistema,
                                                             enlace_ok=self.enlace.ok,
                                                             pendientes_sincronizar=pendientes))
-            vuelta += 1
             try:
                 await asyncio.wait_for(self.latir_ya.wait(), self.cfg.latido_s)
                 await asyncio.sleep(0.5)
@@ -416,21 +422,20 @@ class Sistema:
                 pass
             self.latir_ya.clear()
 
-    async def publicar_consumo(self) -> None:
-        modelos = [m for m in await self.db.consumo_por_modelo() if (m["entrada"] or 0) + (m["salida"] or 0) > 0]
-        if not modelos:
-            return
-        filas = [{"modelo": m["modelo"], "tokens_entrada": int(m["entrada"]), "tokens_salida": int(m["salida"]),
-                  "tokens_total": int(m["entrada"]) + int(m["salida"]),
-                  "tokens_por_segundo": round(int(m["salida"]) / (m["ms"] / 1000), 2) if m["ms"] else None,
-                  "velocidad_estimada": False} for m in modelos]
-        entrada, salida = sum(f["tokens_entrada"] for f in filas), sum(f["tokens_salida"] for f in filas)
-        ms = sum(m["ms"] or 0 for m in modelos)
-        self.bus.publicar("sistema/metricas", {
-            "ts": datetime.now(timezone.utc).isoformat(), "sistema": self.cfg.sistema, "tokens_entrada": entrada,
-            "tokens_salida": salida, "tokens_total": entrada + salida,
-            "tokens_por_segundo": round(salida / (ms / 1000), 2) if ms else None, "velocidad_estimada": False,
-            "modelos": filas})
+    async def publicar_metricas(self) -> None:
+        while True:
+            await asyncio.sleep(METRICAS_S)
+            if not self.db_lista:
+                continue
+            cargados = [m.nombre for m in (self.transcriptor, self.llm) if m is not None]
+            try:
+                consumo = metricas.consumo_tokens(await self.db.consumo_por_modelo(), cargados, self.cfg.sistema,
+                                                  datetime.now(timezone.utc))
+            except Exception:  # noqa: BLE001
+                log.exception("No pude leer el consumo de la base")
+                continue
+            if consumo["modelos"]:
+                self.bus.publicar("sistema/metricas", consumo)
 
     async def sincronizar_nube(self) -> None:
         while True:

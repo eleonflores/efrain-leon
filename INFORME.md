@@ -97,12 +97,19 @@ presupuesto de memoria, y porque el prefijo de instrucciones (~830 tokens) queda
 | --- | ---: | ---: | ---: |
 | Extracción del parte por reglas (camino normal) | 0 | 0 | USD 0 |
 | Extracción con LLM (respaldo, por nota) | ~430 nuevos (+ ~830 en caché) | ~50 | USD 0 (local) |
-| Transcripción | — (audio) | — | USD 0 |
+| Transcripción | — (audio) | ~3–4 por segundo de audio (texto decodificado) | USD 0 |
 | Respuestas del operador, seguridad, detección | 0 | 0 | USD 0 |
 
 En las corridas de `martes-tranquilo` y `fuga-sin-enlace` el LLM no hizo falta: todas las notas las resolvieron las
-reglas. El consumo real queda registrado por paso en la tabla `pasos` y se publica en `sistema/metricas` (lo muestra
-el visor).
+reglas. El consumo real queda registrado por paso en la tabla `pasos`, con el tiempo de generación que informa Ollama,
+y se publica cada 10 s en `sistema/metricas`: el visor 2D de la planta muestra una fila por modelo (Whisper y el LLM)
+con sus tokens y la velocidad de generación. `python -m sistema.metricas` da el reporte de funcionamiento (ver
+[README](README.md#modelos-y-fluidez-en-vivo)).
+
+En vivo, con la planta corriendo en la misma máquina, Whisper transcribe en ~0,5× la duración del audio (~9,5 tokens
+de texto por segundo, encoder incluido) y el LLM genera a ~4,8 tokens/s. En la demo del 10/11 las tres llamadas de
+respaldo al LLM cortaron por timeout (45 s): con este hardware el respaldo rara vez llega a tiempo, y el camino que
+sostiene la nota son las reglas.
 
 ## Conclusión
 

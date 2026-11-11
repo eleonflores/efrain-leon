@@ -75,9 +75,12 @@ class ModeloLocal:
             except Exception as e:  # noqa: BLE001
                 error = e
         uso = (getattr(crudo, "usage_metadata", None) or {}) if crudo is not None else {}
+        meta = (getattr(crudo, "response_metadata", None) or {}) if crudo is not None else {}
+        detalle = {"error": repr(error)} if error else {}
+        if meta.get("eval_duration"):
+            detalle["generacion_ms"] = int(meta["eval_duration"] / 1e6)
         paso = Paso(etapa, self.nombre, int(uso.get("input_tokens", 0)), int(uso.get("output_tokens", 0)),
-                    int((time.perf_counter() - t0) * 1000), resultado is not None,
-                    detalle={"error": repr(error)} if error else {})
+                    int((time.perf_counter() - t0) * 1000), resultado is not None, detalle=detalle)
         if presupuesto:
             presupuesto.pasos += 1
             presupuesto.tokens += paso.tokens_entrada + paso.tokens_salida

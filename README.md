@@ -91,8 +91,8 @@ planta/recorridas ─► audio ─► Whisper small (local) ─► ¿condición 
 - **Detección:** `src/sistema/dominio/deteccion.py`. Por parte confirmado, un evento por equipo; por sensores, solo
   los desvíos sostenidos 30 min de planta (una bomba parada no es un desvío).
 - **Control** (módulo 1.4): timeout global por nota, presupuesto de pasos y tokens de LLM, tope de borradores; cada
-  paso queda registrado con modelo, herramienta, argumentos, tokens, costo y tiempo (tabla `pasos`). El consumo de
-  tokens se publica en `sistema/metricas` y lo muestra el visor.
+  paso queda registrado con modelo, herramienta, argumentos, tokens, costo y tiempo (tabla `pasos`). El consumo por
+  modelo se publica en `sistema/metricas` y lo muestra el visor (ver [Modelos y fluidez en vivo](#modelos-y-fluidez-en-vivo)).
 - **Memoria:** el estado de la conversación de cada nota se guarda en Postgres en cada transición; política escrita
   en [docs/memoria.md](docs/memoria.md).
 
@@ -128,6 +128,48 @@ qué por API o SQL (límites y stock nunca salen del RAG). Contra la línea de b
 
 Detalle y ablaciones en [evaluacion/rag/](evaluacion/rag/README.md).
 
+## Modelos y fluidez en vivo
+
+| Modelo | Para qué | Dónde corre |
+| --- | --- | --- |
+| Whisper small int8 (`faster-whisper`) | Transcribir cada nota | `sistema`, 2 hilos |
+| Qwen3.5 2B (`qwen3.5:2b`, Ollama) | Respaldo de la extracción cuando las reglas no alcanzan | `ollama`, 2 hilos |
+| multilingual-e5-small int8 (`fastembed`) | Embeddings de la búsqueda en manuales | `herramientas` |
+
+Cómo se eligió cada uno y cuánto consume: [INFORME.md](INFORME.md).
+
+- **Visor 2D de la planta** (<http://localhost:8081>): el panel de consumo muestra cada modelo del sistema con sus
+  tokens de entrada y salida y la velocidad de generación. Se actualiza cada 10 s (`sistema/metricas`) y aparece
+  desde el arranque, aunque el LLM todavía no haya hecho falta.
+- **Reporte de funcionamiento**, de solo lectura sobre la base (anda sin enlace):
+
+  ```bash
+  docker compose exec sistema python -m sistema.metricas
+  ```
+
+Salida real al final de `fuga-sin-enlace` en el corrector de Novit, que arranca cada escenario con la base vacía:
+
+```text
+Sistema Efrain Leon · 4 notas (confirmada 3, alerta 1) · costo USD 0, todo local
+
+Fluidez, en tiempo real
+  Nota → primer mensaje en la tablet   p50 3,9 s · p95 4,6 s · máx 4,6 s · notas: 4
+  Nota → alerta de seguridad           p50 4,6 s · p95 4,6 s · máx 4,6 s · alertas (límite 30 s): 1
+
+Modelos y reglas
+  faster-whisper small int8    4 notas · audio p50 8,8 s → transcribe en p50 3,6 s / p95 4,5 s (0,45× el audio) · 115 tokens a 7,6 tok/s
+  reglas_parte                 3 notas · 3 completas (100,0 %) · p50 < 1 ms
+
+Diálogo con el operador
+  Confirmadas al primer borrador 2 de 3 (66,7 %) · preguntas 1 · borradores rehechos 0
+
+Cola hacia la nube: 1 enviados · 0 pendientes
+```
+
+En `martes-tranquilo` la misma corrida dio 7 de 9 notas confirmadas al primer borrador, lo mismo que midió el
+corrector (A2), y una demora a la tablet de p50 4,2 s / p95 12,0 s: las notas que llegan juntas esperan su turno de
+transcripción. Cuando el LLM entra, el reporte suma su fila con llamadas, timeouts y tok/s de generación.
+
 ## Pruebas y evaluación
 
 ```bash
@@ -160,12 +202,17 @@ A2 y A3 no llegan al 100 % porque tres de las notas de esos escenarios no tienen
 seguridad y "la bomba está parada, en reserva"), y el corrector solo cuenta como borrador uno con valores. La alerta
 de seguridad salió 4 s después de la nota, con el enlace caído; 0 mensajes inválidos.
 
+La nota puede variar alrededor de un punto entre corridas: el audio de las notas cambia en cada corrida y Whisper a
+veces transcribe distinto un número. En una corrida "mil seiscientos psi" salió "600 psi" (90,4 / 100): el borrador
+avisó que estaba fuera del rango de los últimos 45 días, el operador lo corrigió y el parte final quedó bien.
+
 ## Estructura
 
 ```text
 src/sistema/
   agente.py            orquestación de la PC de planta (MQTT, notas, tablet, eventos, latido, cola a la nube)
   config.py            configuración por variables de entorno
+  metricas.py          consumo por modelo para el visor y reporte de funcionamiento
   dominio/             planta (equipos, nombres, límites) y detección
   procesamiento/       transcripción, seguridad, números, reglas del parte, extracción con LLM, diálogo
   llm/                 LLM local por LangChain, con presupuesto y registro de cada paso
@@ -186,5 +233,6 @@ tests/
 
 - La primera lectura de un goteo de empaquetadura no lleva número (el operador no lo dicta) y la planta lo espera en
   gotas por minuto: ese primer borrador se corrige con la respuesta del operador.
-- El LLM local en CPU es lento (40 a 80 s por nota); por eso es respaldo y no camino principal.
+- El LLM local en CPU es lento (40 a 80 s por nota); por eso es respaldo y no camino principal. Con la planta
+  corriendo en la misma máquina suele cortar por timeout (45 s): el reporte de funcionamiento lo muestra.
 - La limpieza periódica según la política de memoria y el análisis de anomalías llegan con la Entrega 2.
