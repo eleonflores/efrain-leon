@@ -27,10 +27,10 @@ Academia Novit 2026. Corre junto a la planta simulada de Novit
 | [`transcripcion`](specs/transcripcion/spec.md) | Audio de la nota → texto, local y en CPU |
 | [`alerta-de-seguridad`](specs/alerta-de-seguridad/spec.md) | Condiciones S1–S4, alerta y aviso en < 30 s sin enlace |
 | [`extraccion-del-parte`](specs/extraccion-del-parte/spec.md) | Texto → filas del parte: números, reglas, LLM de respaldo, TAG, unidades, ambigüedades |
-| [`dialogo-con-la-tablet`](specs/dialogo-con-la-tablet/spec.md) | Borrador, preguntas, correcciones, confirmación y estado que sobrevive a un reinicio |
-| [`deteccion-en-planta`](specs/deteccion-en-planta/spec.md) | `SinNovedad`/`Escalado` por equipo, desvíos sostenidos, rango histórico |
+| [`dialogo-con-la-tablet`](specs/dialogo-con-la-tablet/spec.md) | Borrador, preguntas, correcciones, parte de Borrador a Confirmado y estado que sobrevive a un reinicio |
+| [`deteccion-en-planta`](specs/deteccion-en-planta/spec.md) | `SinNovedad`/`Escalado` por equipo, desvíos sostenidos, rango histórico, evidencia con fotos hacia la nube |
 | [`latido-y-sincronizacion`](specs/latido-y-sincronizacion/spec.md) | Latido, estado del enlace y cola hacia la nube |
-| [`control-de-ejecucion`](specs/control-de-ejecucion/spec.md) | Timeout, presupuesto, registro de pasos, métricas y validación de lo publicado |
+| [`control-de-ejecucion`](specs/control-de-ejecucion/spec.md) | Timeout, presupuesto, registro de cada paso y decisión, métricas y validación de lo publicado |
 | [`herramientas-de-consulta`](specs/herramientas-de-consulta/spec.md) | Seis tools de solo lectura y el servidor MCP |
 | [`busqueda-en-manuales`](specs/busqueda-en-manuales/spec.md) | RAG híbrido con filtros de vigencia y aplicabilidad |
 | [`evaluacion`](specs/evaluacion/spec.md) | Evaluación del parte contra la verdad de campo, con los resultados de cada entrega |

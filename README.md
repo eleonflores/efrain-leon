@@ -79,8 +79,10 @@ planta/recorridas ─► audio ─► Whisper small (local) ─► ¿condición 
 
 - **Specs (OpenSpec):** qué hace el sistema y por qué, un spec por capacidad con sus escenarios, en
   [openspec/specs/](openspec/project.md): transcripción, alerta de seguridad, extracción del parte, diálogo con la
-  tablet, detección, latido y sincronización, control de ejecución, tools, búsqueda en manuales y evaluación. Los
-  cambios nuevos entran como changes de OpenSpec (`openspec/changes/`).
+  tablet, detección, latido y sincronización, control de ejecución, tools, búsqueda en manuales y evaluación. La mini
+  spec del flujo del parte que pide la Entrega 1 son [extraccion-del-parte](openspec/specs/extraccion-del-parte/spec.md)
+  y [dialogo-con-la-tablet](openspec/specs/dialogo-con-la-tablet/spec.md). Los cambios nuevos entran como changes de
+  OpenSpec (`openspec/changes/`).
 - **El modelo propone, el código dispone:** límites, conversiones, nombres de equipos, rangos y la decisión
   `SinNovedad`/`Escalado` son código determinístico. El texto de la nota entra delimitado como dato.
 - **Reglas primero, LLM de respaldo:** el dictado del operador es regular y las reglas lo resuelven en milisegundos.
@@ -91,8 +93,9 @@ planta/recorridas ─► audio ─► Whisper small (local) ─► ¿condición 
 - **Detección:** `src/sistema/dominio/deteccion.py`. Por parte confirmado, un evento por equipo; por sensores, solo
   los desvíos sostenidos 30 min de planta (una bomba parada no es un desvío).
 - **Control** (módulo 1.4): timeout global por nota, presupuesto de pasos y tokens de LLM, tope de borradores; cada
-  paso queda registrado con modelo, herramienta, argumentos, tokens, costo y tiempo (tabla `pasos`). El consumo por
-  modelo se publica en `sistema/metricas` y lo muestra el visor (ver [Modelos y fluidez en vivo](#modelos-y-fluidez-en-vivo)).
+  paso y cada decisión (seguridad, `SinNovedad`/`Escalado`, consultas a la planta) quedan registrados con modelo,
+  herramienta, argumentos, tokens, costo y tiempo (tabla `pasos`). El consumo por modelo se publica en
+  `sistema/metricas` y lo muestra el visor (ver [Modelos y fluidez en vivo](#modelos-y-fluidez-en-vivo)).
 - **Memoria:** el estado de la conversación de cada nota se guarda en Postgres en cada transición; política escrita
   en [docs/memoria.md](docs/memoria.md).
 
