@@ -293,6 +293,7 @@ class Sistema:
                               filas=[f.a_fila_parte() for f in estado.filas if f.tag],
                               opciones=dialogo.opciones_de_valor(estado.filas),
                               titulo="Parte de recorrida · borrador")
+            await self.db.guardar_parte(estado.id, "Borrador", estado.filas_json(), estado.nota.get("ts"))
         await self.db.actualizar_nota(estado.id, fase=estado.fase, intento=estado.intento, borrador=estado.filas_json())
 
     async def tablet(self, estado: EstadoNota, mensaje_id: str, texto: str, *, filas: list[dict] | None = None,

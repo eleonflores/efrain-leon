@@ -18,7 +18,7 @@ historial de otras notas. Así una nota mal transcripta o con instrucciones incr
 
 | Qué | Tabla | Por qué | Vence |
 | --- | --- | --- | --- |
-| Partes confirmados | `partes` | Es el registro de la recorrida (reemplaza la planilla de papel) y el historial propio para rangos de variables sin sensor | 2 años (como el historial de órdenes) |
+| Partes: en `Borrador` mientras se dialoga, en `Confirmado` cuando el operador lo valida | `partes` | Es el registro de la recorrida (reemplaza la planilla de papel) y el historial propio para rangos de variables sin sensor | 2 años (como el historial de órdenes) |
 | Eventos (`SinNovedad`, `Escalado`, `AlertaSeguridad`) con su contexto | `eventos` | Evidencia de cada decisión; idempotencia (el mismo id no se publica dos veces) | 2 años |
 | Fotos de las notas (el contenido, bajado de la planta) | `fotos` | Evidencia del parte, del `Escalado` y de la alerta; la nube no puede bajarlas de la planta | 2 años (como los eventos) |
 | Registro de pasos: modelo, herramienta, argumentos, tokens, costo y tiempo | `pasos` | Trazabilidad que pide el enunciado (F) y medición de consumo para el INFORME | 90 días |
