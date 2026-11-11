@@ -1,0 +1,225 @@
+{
+ "resumen": {
+  "escenario": "martes-tranquilo",
+  "notas": 9,
+  "con_mensaje_en_tablet": 9,
+  "primer_borrador_confirmado": 8,
+  "confirmado_al_final": 8,
+  "notas_comunes": 9,
+  "aciertos_por_campo": {
+   "equipo": "18/18",
+   "valor": "18/18",
+   "unidad": "18/18"
+  },
+  "pregunto_en_ambiguas": "2/2",
+  "pregunto_de_mas": "0/7",
+  "latencia_tablet_s": {
+   "p50": 4.05,
+   "p95": 4.61
+  },
+  "latencia_alerta_s": [],
+  "mensajes_invalidos": 0,
+  "costo_usd": 0.0,
+  "consumo_tokens": null
+ },
+ "notas": [
+  {
+   "nota": "NOTA-00002",
+   "texto": "El de la izquierda me dio uno con cuatro de diferencial. La dos está en mil seiscientos veinte psi de descarga.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-102"
+    ],
+    [
+     "SinNovedad",
+     "F-201A"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00003",
+   "texto": "A ver, la de la punta está en ciento catorce de descarga. El secundario me dio uno de diferencial.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-101"
+    ],
+    [
+     "SinNovedad",
+     "F-201B"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00005",
+   "texto": "El pulmón está en cinco metros.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "TK-301"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00008",
+   "texto": "La bomba está parada, en reserva.",
+   "seguridad": null,
+   "ambigua": true,
+   "mensajes": 3,
+   "pregunto": true,
+   "borradores": 0,
+   "primer_borrador_confirmado": false,
+   "confirmado_al_final": false,
+   "problemas_primer_borrador": null,
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-103"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00007",
+   "texto": "Listo, la del medio está en mil seiscientos diez libras de descarga. El filtro A me dio uno coma tres de diferencial.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-102"
+    ],
+    [
+     "SinNovedad",
+     "F-201A"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00006",
+   "texto": "La de la punta está en ciento doce de descarga. El de la derecha me dio cero nueve de diferencial.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-101"
+    ],
+    [
+     "SinNovedad",
+     "F-201B"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00010",
+   "texto": "El filtro B me dio cero nueve de diferencial. El pulmón está en cinco metros.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "F-201B"
+    ],
+    [
+     "SinNovedad",
+     "TK-301"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00011",
+   "texto": "La uno está en ciento doce kilogramos de descarga, el rodamiento me dio cincuenta y nueve grados con la pistola. También la bomba está en mil seiscientos psi de descarga. El filtro A me dio uno coma tres de diferencial.",
+   "seguridad": null,
+   "ambigua": true,
+   "mensajes": 3,
+   "pregunto": true,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-101"
+    ],
+    [
+     "SinNovedad",
+     "B-102"
+    ],
+    [
+     "SinNovedad",
+     "F-201A"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00013",
+   "texto": "Bueno, la dos está en mil quinientos noventa libras de descarga. El filtro A me dio uno tres de diferencial. La de la punta está en ciento doce kilos de descarga.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-101"
+    ],
+    [
+     "SinNovedad",
+     "B-102"
+    ],
+    [
+     "SinNovedad",
+     "F-201A"
+    ]
+   ]
+  }
+ ]
+}

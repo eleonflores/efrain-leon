@@ -33,6 +33,7 @@ Academia Novit 2026. Corre junto a la planta simulada de Novit
 | [`control-de-ejecucion`](specs/control-de-ejecucion/spec.md) | Timeout, presupuesto, registro de pasos, métricas y validación de lo publicado |
 | [`herramientas-de-consulta`](specs/herramientas-de-consulta/spec.md) | Seis tools de solo lectura y el servidor MCP |
 | [`busqueda-en-manuales`](specs/busqueda-en-manuales/spec.md) | RAG híbrido con filtros de vigencia y aplicabilidad |
+| [`evaluacion`](specs/evaluacion/spec.md) | Evaluación del parte contra la verdad de campo, con los resultados de cada entrega |
 
 El diseño que no es requisito vive en `docs/` (memoria, context builder, RAG) y la elección de modelos con sus
 mediciones en `INFORME.md`.

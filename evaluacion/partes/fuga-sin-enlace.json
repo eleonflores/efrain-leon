@@ -1,0 +1,105 @@
+{
+ "resumen": {
+  "escenario": "fuga-sin-enlace",
+  "notas": 4,
+  "con_mensaje_en_tablet": 4,
+  "primer_borrador_confirmado": 2,
+  "confirmado_al_final": 2,
+  "notas_comunes": 3,
+  "aciertos_por_campo": {
+   "equipo": "4/4",
+   "valor": "4/4",
+   "unidad": "4/4"
+  },
+  "pregunto_en_ambiguas": "1/1",
+  "pregunto_de_mas": "0/2",
+  "latencia_tablet_s": {
+   "p50": 3.52,
+   "p95": 3.53
+  },
+  "latencia_alerta_s": [
+   3.520069
+  ],
+  "mensajes_invalidos": 0,
+  "costo_usd": 0.0,
+  "consumo_tokens": null
+ },
+ "notas": [
+  {
+   "nota": "NOTA-00001",
+   "texto": "¡Atención! Se rompió algo en la descarga de la uno, sale agua a presión para todos lados, me alejé. Saqué foto desde lejos.",
+   "seguridad": "S1",
+   "ambigua": false,
+   "mensajes": 1,
+   "pregunto": false,
+   "borradores": 0,
+   "primer_borrador_confirmado": false,
+   "confirmado_al_final": false,
+   "problemas_primer_borrador": null,
+   "eventos": [
+    [
+     "AlertaSeguridad",
+     "B-101"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00006",
+   "texto": "Listo, la bomba está parada, en reserva.",
+   "seguridad": null,
+   "ambigua": true,
+   "mensajes": 3,
+   "pregunto": true,
+   "borradores": 0,
+   "primer_borrador_confirmado": false,
+   "confirmado_al_final": false,
+   "problemas_primer_borrador": null,
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-103"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00004",
+   "texto": "La dos está en mil seiscientos diez libras de descarga. El pulmón está en cinco metros.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-102"
+    ],
+    [
+     "SinNovedad",
+     "TK-301"
+    ]
+   ]
+  },
+  {
+   "nota": "NOTA-00005",
+   "texto": "La uno está en ciento catorce kilos de descarga, el rodamiento me dio sesenta y cuatro grados con la pistola.",
+   "seguridad": null,
+   "ambigua": false,
+   "mensajes": 2,
+   "pregunto": false,
+   "borradores": 1,
+   "primer_borrador_confirmado": true,
+   "confirmado_al_final": true,
+   "problemas_primer_borrador": [],
+   "eventos": [
+    [
+     "SinNovedad",
+     "B-101"
+    ]
+   ]
+  }
+ ]
+}

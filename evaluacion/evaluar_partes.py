@@ -1,8 +1,12 @@
-"""Evalúa el parte por voz contra la verdad de campo (`/api/verdad`, abierta fuera de la corrección).
+"""Evalúa el parte por voz contra la verdad de campo.
 
-Se corre después de un escenario, con el sistema levantado:
+Desde una corrida del corrector (trae la verdad y el registro de lo que publicó el sistema):
 
-    python evaluacion/evaluar_partes.py --salida evaluacion/resultados/martes-tranquilo.json
+    python evaluacion/evaluar_partes.py --corrida ../academia2026-tp/correccion/corridas/<corrida>/martes-tranquilo.json         --salida evaluacion/partes/martes-tranquilo.json
+
+O contra la planta en desarrollo (`/api/verdad` abierta), después de correr un escenario con el sistema levantado:
+
+    python evaluacion/evaluar_partes.py --salida evaluacion/partes/martes-tranquilo.json
 """
 
 from __future__ import annotations
@@ -42,13 +46,19 @@ def percentil(valores: list[float], p: float) -> float | None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--api", default="http://localhost:8100")
+    ap.add_argument("--corrida", type=Path, help="JSON de un escenario de una corrida del corrector")
     ap.add_argument("--salida", type=Path)
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
-    http = httpx.Client(base_url=a.api, timeout=60)
-    verdad = http.get("/api/verdad").json()
-    registro = http.get("/api/registro").json()
-    estado = http.get("/api/estado").json()
+    if a.corrida:
+        corrida = json.loads(a.corrida.read_text(encoding="utf-8"))
+        escenario, verdad, registro, estado = corrida["escenario"], corrida["verdad"], corrida["registro"], {}
+    else:
+        http = httpx.Client(base_url=a.api, timeout=60)
+        verdad = http.get("/api/verdad").json()
+        registro = http.get("/api/registro").json()
+        estado = http.get("/api/estado").json()
+        escenario = estado.get("escenario")
 
     notas = [v for v in verdad if "recorrida_id" in v and v.get("tipo") != "vivo"]
     dialogos = [v for v in verdad if v.get("tipo") == "dialogo"]
@@ -76,8 +86,9 @@ def main() -> None:
         if primero:
             filas = [f for f in primero["payload"]["pantalla"]["filas"] if f.get("valor") is not None]
             for item in (i for i in n["items"] if i.get("valor") is not None):
-                fila = next((f for f in filas if cerca(f["valor"], item["valor"], f.get("unidad"), item.get("unidad"))),
-                            None) or next((f for f in filas if f["tag"] == item["tag"]), None)
+                fila = next((f for f in filas if f["tag"] == item["tag"] and f["variable"] == item["variable"]),
+                            None) or next((f for f in filas if cerca(f["valor"], item["valor"], f.get("unidad"),
+                                                                      item.get("unidad"))), None)
                 campos["equipo"][1] += 1
                 campos["valor"][1] += 1
                 campos["unidad"][1] += 1
@@ -100,7 +111,7 @@ def main() -> None:
     ambiguas = [p for p in comunes if p["ambigua"]]
     claras = [p for p in comunes if not p["ambigua"]]
     resumen = {
-        "notas": len(notas), "con_mensaje_en_tablet": sum(p["mensajes"] > 0 for p in por_nota),
+        "escenario": escenario, "notas": len(notas), "con_mensaje_en_tablet": sum(p["mensajes"] > 0 for p in por_nota),
         "primer_borrador_confirmado": sum(p["primer_borrador_confirmado"] for p in comunes),
         "confirmado_al_final": sum(p["confirmado_al_final"] for p in comunes), "notas_comunes": len(comunes),
         "aciertos_por_campo": {k: f"{v[0]}/{v[1]}" for k, v in campos.items()},
@@ -109,6 +120,7 @@ def main() -> None:
         "latencia_tablet_s": {"p50": percentil(lat_tablet, 0.5), "p95": percentil(lat_tablet, 0.95)},
         "latencia_alerta_s": lat_alerta,
         "mensajes_invalidos": sum(not r["valido"] for r in registro),
+        "costo_usd": 0.0,
         "consumo_tokens": (estado.get("sistema") or {}).get("consumo_tokens"),
     }
     print(json.dumps(resumen, ensure_ascii=False, indent=1))

@@ -79,8 +79,8 @@ planta/recorridas ─► audio ─► Whisper small (local) ─► ¿condición 
 
 - **Specs (OpenSpec):** qué hace el sistema y por qué, un spec por capacidad con sus escenarios, en
   [openspec/specs/](openspec/project.md): transcripción, alerta de seguridad, extracción del parte, diálogo con la
-  tablet, detección, latido y sincronización, control de ejecución, tools y búsqueda en manuales. Los cambios nuevos
-  entran como changes de OpenSpec (`openspec/changes/`).
+  tablet, detección, latido y sincronización, control de ejecución, tools, búsqueda en manuales y evaluación. Los
+  cambios nuevos entran como changes de OpenSpec (`openspec/changes/`).
 - **El modelo propone, el código dispone:** límites, conversiones, nombres de equipos, rangos y la decisión
   `SinNovedad`/`Escalado` son código determinístico. El texto de la nota entra delimitado como dato.
 - **Reglas primero, LLM de respaldo:** el dictado del operador es regular y las reglas lo resuelven en milisegundos.
@@ -182,14 +182,15 @@ pytest                                   # tests de reglas, diálogo, detección
 | Transcripción | WER, números bien transcritos, latencia y RAM de cada modelo candidato, sobre las 102 notas del banco de voces con ruido de planta | [evaluacion/stt/](evaluacion/stt/) |
 | LLM | Extracción del parte con el criterio del operador virtual | [evaluacion/llm/](evaluacion/llm/) |
 | Reglas y detección | 400 notas generadas con el operador virtual de la planta: borrador confirmable, ambigüedades, decisión B1 | [evaluacion/reglas/](evaluacion/reglas/) |
-| Parte por voz de punta a punta | Contra `/api/verdad` después de correr un escenario: aciertos por campo, preguntas, latencias, tokens | `evaluacion/evaluar_partes.py` |
+| Parte por voz de punta a punta | Contra la verdad de campo (`/api/verdad` o una corrida del corrector): aciertos por campo, preguntas en ambiguas y de más, demoras, costo | [evaluacion/partes/](evaluacion/partes/README.md) |
 | RAG | hit@k, recall@k, MRR, Rev. C antes que D, contra BM25 | [evaluacion/rag/](evaluacion/rag/README.md) |
 
-Para correr un escenario y evaluarlo (con la planta en modo desarrollo):
+Para correr un escenario y evaluarlo (con la planta en modo desarrollo), o evaluar una corrida del corrector:
 
 ```bash
 python evaluacion/capturar_escenario.py martes-tranquilo --salida corridas --repo-planta ../academia2026-tp
 python evaluacion/evaluar_partes.py
+python evaluacion/evaluar_partes.py --corrida ../academia2026-tp/correccion/corridas/<corrida>/martes-tranquilo.json
 ```
 
 El corrector de Novit también se puede correr localmente desde el repo de la planta:
