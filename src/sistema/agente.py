@@ -150,9 +150,15 @@ class Sistema:
                 await self.listo.wait()
                 await self.db.guardar_nota(nota, "recibida")
                 texto = await self.transcribir(estado)
+                t0 = time.perf_counter()
                 condiciones = seguridad.detectar(texto)
+                ms = int((time.perf_counter() - t0) * 1000)
                 if condiciones:
                     await self.alertar(estado, condiciones)
+                await self.db.registrar_paso(estado.id, "seguridad", herramienta="detector_seguridad",
+                                             argumentos={"texto": texto}, duracion_ms=ms,
+                                             detalle={"condiciones": [c.codigo for c in condiciones]})
+                if condiciones:
                     return
                 await self.extraer(estado)
                 if not any(f.valor is not None or f.observacion for f in estado.filas):
@@ -173,8 +179,10 @@ class Sistema:
         url = estado.nota.get("audio_url")
         if not url:
             return ""
+        t0 = time.perf_counter()
         r = await self.http.get(url)
         r.raise_for_status()
+        descarga_ms = int((time.perf_counter() - t0) * 1000)
         audio = stt.wav_a_audio(r.content)
         async with self._turno_stt:
             texto, tokens, dur = await self.transcriptor.transcribir_async(audio)
@@ -183,8 +191,9 @@ class Sistema:
         await self.db.actualizar_nota(estado.id, transcripcion=texto, fase="transcrita")
         ms = int(dur * 1000)
         await self.db.registrar_paso(estado.id, "transcripcion", modelo=self.transcriptor.nombre, tokens_salida=tokens,
-                                     duracion_ms=ms, detalle={"audio_s": round(len(audio) / stt.SR, 1),
-                                                              "generacion_ms": ms})
+                                     argumentos={"audio_url": url}, duracion_ms=ms,
+                                     detalle={"audio_s": round(len(audio) / stt.SR, 1), "generacion_ms": ms,
+                                              "descarga_ms": descarga_ms})
         return texto
 
     async def extraer(self, estado: EstadoNota) -> None:
@@ -206,14 +215,14 @@ class Sistema:
             elif dictado is not None:
                 log.info("Nota %s: el LLM no resolvió; va el borrador parcial de las reglas", estado.id)
         estado.filas = armar_borrador(dictado, self.planta, estado.nota.get("fotos", [])) if dictado else []
-        await self.marcar_fuera_de_rango(estado.filas)
+        await self.marcar_fuera_de_rango(estado.filas, estado.id)
 
-    async def marcar_fuera_de_rango(self, filas: list[FilaBorrador]) -> None:
+    async def marcar_fuera_de_rango(self, filas: list[FilaBorrador], nota_id: str) -> None:
         for f in filas:
             sensor = SENSOR_DE_LECTURA.get(f.variable)
             if not (sensor and f.tag and f.valor is not None and f.valor_dicho is None):
                 continue
-            rango = await self.rango_historico(f.tag, sensor)
+            rango = await self.rango_historico(f.tag, sensor, nota_id)
             if rango is None:
                 continue
             bajo, alto, _ = rango
@@ -222,14 +231,15 @@ class Sistema:
                 f.fuera_de_rango = (f"{dialogo._fmt(f.valor)} {dialogo.UNIDAD_VISIBLE.get(f.unidad or '', '')} está "
                                     f"fuera del rango de los últimos 45 días ({bajo:.2f} a {alto:.2f} kg/cm²)")
 
-    async def rango_historico(self, tag: str, sensor: str) -> tuple[float, float, datetime] | None:
+    async def rango_historico(self, tag: str, sensor: str,
+                              nota_id: str | None = None) -> tuple[float, float, datetime] | None:
         """(bajo, alto, calculado_en) del rango normal del sensor; None si no hay historial suficiente."""
         clave = (tag, sensor)
         guardado = self._rangos.get(clave)
         if guardado and self.ahora() - guardado[2] < timedelta(hours=6):
             return guardado
         try:
-            serie = await self.api.historian(tag, sensor)
+            serie = await self.consultar_historian(nota_id, tag, sensor)
         except ErrorPlanta:
             return guardado
         minimo = BOMBA_PARADA_KG if sensor == "presion_descarga" else float("-inf")
@@ -240,6 +250,23 @@ class Sistema:
         bajo, alto = valores[int(0.01 * (len(valores) - 1))], valores[int(0.99 * (len(valores) - 1))]
         self._rangos[clave] = (bajo * 0.97, alto * 1.03, self.ahora())
         return self._rangos[clave]
+
+    async def consultar_historian(self, nota_id: str | None, tag: str, sensor: str, *, desde: datetime | None = None,
+                                  hasta: datetime | None = None) -> list[dict]:
+        argumentos = {"tag": tag, "sensor": sensor, "desde": desde and desde.isoformat(),
+                      "hasta": hasta and hasta.isoformat()}
+        t0 = time.perf_counter()
+        try:
+            serie = await self.api.historian(tag, sensor, desde=desde, hasta=hasta)
+        except ErrorPlanta as e:
+            await self.db.registrar_paso(nota_id, "consulta", herramienta="historian", argumentos=argumentos,
+                                         duracion_ms=int((time.perf_counter() - t0) * 1000), ok=False,
+                                         detalle={"error": e.mensaje})
+            raise
+        await self.db.registrar_paso(nota_id, "consulta", herramienta="historian", argumentos=argumentos,
+                                     duracion_ms=int((time.perf_counter() - t0) * 1000),
+                                     detalle={"muestras": len(serie)})
+        return serie
 
     async def avanzar(self, estado: EstadoNota) -> None:
         """Manda a la tablet el próximo paso: pregunta por un equipo ambiguo, aviso informativo o borrador."""
@@ -294,7 +321,7 @@ class Sistema:
             ambigua.tag = i.elegido or ambigua.candidatos[0]
             ambigua.unidad = ambigua.unidad or self.planta.unidad_por_defecto(ambigua.tag, ambigua.variable)
             ambigua.candidatos = []
-            await self.marcar_fuera_de_rango([ambigua])
+            await self.marcar_fuera_de_rango([ambigua], estado.id)
             return await self.avanzar(estado)
         if estado.fase != "borrador":
             return
@@ -303,7 +330,7 @@ class Sistema:
             return await self.confirmar(estado)
         if i.tipo == "corrige":
             estado.filas = dialogo.aplicar(estado.filas, i.correcciones, self.planta)
-            await self.marcar_fuera_de_rango(estado.filas)
+            await self.marcar_fuera_de_rango(estado.filas, estado.id)
         if estado.intento >= self.cfg.max_intentos_borrador:
             return await self._abandonar(estado, f"sin confirmación después de {estado.intento} borradores")
         await self.avanzar(estado)
@@ -330,19 +357,24 @@ class Sistema:
         self.bus.publicar(Topicos.EVENTOS, evento)
         contexto = None
         if d.tipo == "Escalado":
-            contexto = {"parte": parte, "fotos": fotos or [], "tendencia": await self.tendencia(d.tag, ts)}
+            contexto = {"parte": parte, "fotos": fotos or [], "tendencia": await self.tendencia(d.tag, ts, parte_id)}
             await self.db.encolar(evento_id, "escalado", {"evento": evento.model_dump(mode="json"), "contexto": contexto})
             self.latir_ya.set()
         await self.db.guardar_evento(evento.model_dump(mode="json"), contexto)
+        await self.db.registrar_paso(parte_id, "deteccion",
+                                     herramienta="evaluar_parte" if origen == "parte" else "monitor_sensores",
+                                     argumentos={"evento_id": evento_id, "equipo": d.tag, "filas": parte},
+                                     detalle={"tipo": d.tipo, "motivos": d.motivos})
         log.info("Evento %s %s %s: %s", evento_id, d.tipo, d.tag or "", resumen)
 
-    async def tendencia(self, tag: str | None, ts: datetime, horas: int = 6) -> dict:
+    async def tendencia(self, tag: str | None, ts: datetime, nota_id: str | None, horas: int = 6) -> dict:
         if not tag or tag not in self.planta.equipos:
             return {}
         salida = {}
         for sensor in SENSORES_DE_TENDENCIA.get(self.planta.equipos[tag].tipo, []):
             try:
-                serie = await self.api.historian(tag, sensor, desde=ts - timedelta(hours=horas), hasta=ts)
+                serie = await self.consultar_historian(nota_id, tag, sensor, desde=ts - timedelta(hours=horas),
+                                                       hasta=ts)
             except ErrorPlanta:
                 continue
             valores = [m["valor"] for m in serie if m.get("valor") is not None]

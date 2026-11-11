@@ -47,7 +47,10 @@ def _pct(a: int, b: int) -> str:
 
 
 def _paso(p: dict, consumo: dict[str, dict]) -> str:
-    duracion = f"p50 {_num(p['p50_ms'] / 1000)} / p95 {_num(p['p95_ms'] / 1000)}"
+    if p["p95_ms"] < 1000:
+        duracion = f"p50 {_num(p['p50_ms'], 0, ' ms')} / p95 {_num(p['p95_ms'], 0, ' ms')}"
+    else:
+        duracion = f"p50 {_num(p['p50_ms'] / 1000)} / p95 {_num(p['p95_ms'] / 1000)}"
     if p["etapa"] == "transcripcion":
         c = consumo.get(p["nombre"], {})
         velocidad = _velocidad(c.get("salida", 0), c.get("generacion_ms", 0) + c.get("estimado_ms", 0))
@@ -58,6 +61,10 @@ def _paso(p: dict, consumo: dict[str, dict]) -> str:
         completas = p["n"] - p["fallas"]
         p50 = "< 1 ms" if p["p50_ms"] < 1 else _num(p["p50_ms"], 0, " ms")
         return f"{p['n']} notas · {completas} completas ({_pct(completas, p['n'])}) · p50 {p50}"
+    if p["etapa"] == "seguridad":
+        return f"{p['n']} notas · {p['inseguras']} con condición insegura · {duracion}"
+    if p["etapa"] == "deteccion":
+        return f"{p['n']} decisiones · {p['escalados']} Escalado"
     c = consumo.get(p["nombre"])
     texto = f"{p['n']} llamadas · {p['fallas']} fallas ({p['timeouts']} por timeout) · {duracion}"
     if c:
@@ -77,7 +84,7 @@ def reporte(e: dict, sistema: str) -> str:
             lineas.append(f"  {rotulo:<36} p50 {_num(d['p50'])} · p95 {_num(d['p95'])} · máx {_num(d['max'])} · "
                           f"{cuales}: {d['n']}")
     consumo = {c["modelo"]: c for c in e["consumo"]}
-    lineas += ["", "Modelos y reglas"]
+    lineas += ["", "Modelos, reglas y consultas"]
     lineas += [f"  {p['nombre']:<28} {_paso(p, consumo)}" for p in e["pasos"]]
     d, cola = e["dialogo"], e["cola"]
     lineas += ["", "Diálogo con el operador",

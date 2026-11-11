@@ -184,6 +184,8 @@ class Base:
                 """SELECT coalesce(modelo, herramienta) AS nombre, etapa, count(*)::int AS n,
                           count(*) FILTER (WHERE NOT ok)::int AS fallas,
                           count(*) FILTER (WHERE detalle->>'error' ~ '^TimeoutError')::int AS timeouts,
+                          count(*) FILTER (WHERE jsonb_array_length(detalle->'condiciones') > 0)::int AS inseguras,
+                          count(*) FILTER (WHERE detalle->>'tipo' = 'Escalado')::int AS escalados,
                           percentile_cont(0.5) WITHIN GROUP (ORDER BY duracion_ms) AS p50_ms,
                           percentile_cont(0.95) WITHIN GROUP (ORDER BY duracion_ms) AS p95_ms,
                           percentile_cont(0.5) WITHIN GROUP (ORDER BY (detalle->>'audio_s')::float) AS audio_p50_s,
