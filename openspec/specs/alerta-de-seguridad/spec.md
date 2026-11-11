@@ -4,9 +4,7 @@
 
 Detectar en la transcripción de una nota las condiciones inseguras (S1 a S4) y dar la alerta en la tablet y en
 `sistema/eventos` en segundos, sin modelos de lenguaje, sin enlace y sin falsas alarmas.
-
 ## Requirements
-
 ### Requirement: Las condiciones inseguras se detectan por reglas
 
 El sistema SHALL detectar con expresiones regulares sobre la transcripción (sin tildes, en minúsculas) estas
@@ -40,17 +38,19 @@ Ante una condición insegura el sistema SHALL, en este orden:
    y los códigos detectados;
 2. publicar en `sistema/tablet` el aviso `TAB-<nota>-SEG` con `espera_respuesta: false`, el procedimiento de
    emergencia (alejarse, no intervenir solo, avisar por radio al supervisor) y una fila con la condición;
-3. guardar el evento con su evidencia, disparar el latido y encolar la alerta hacia la nube con las fotos.
+3. guardar el evento con su evidencia, disparar el latido y encolar la alerta hacia la nube con el contenido de las
+   fotos de la nota (como el `Escalado`).
 
 La nota SHALL terminar ahí: SHALL NOT generar borrador de parte.
 
 **Razón:** la alerta es lo que no puede faltar. En una corrida, el aviso y la persistencia antes de la alerta la
-demoraron; publicada primero, salió 4 s después de la nota con el enlace caído.
+demoraron; publicada primero, salió 4 s después de la nota con el enlace caído. Las fotos se buscan después de
+publicar, así que no la demoran.
 
 #### Scenario: Nota insegura con el enlace caído
-- **WHEN** llega una nota S1 y el enlace con la nube está caído
+- **WHEN** llega una nota S1 con una foto y el enlace con la nube está caído
 - **THEN** el `AlertaSeguridad` y el aviso salen en menos de 30 s reales desde que llegó la nota
-- **AND** la alerta queda en la cola hacia la nube hasta que vuelva el enlace
+- **AND** la alerta queda en la cola hacia la nube, con el contenido de la foto, hasta que vuelva el enlace
 
 #### Scenario: Nota normal
 - **WHEN** llega una nota de recorrida sin condiciones inseguras
@@ -67,3 +67,4 @@ inferencia, 91,3.
 #### Scenario: Nota insegura al arrancar
 - **WHEN** la primera nota del escenario es insegura y llega mientras el LLM se está cargando
 - **THEN** la transcripción no espera al LLM y la alerta sale en menos de 30 s
+

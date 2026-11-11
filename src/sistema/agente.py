@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 import time
 from dataclasses import dataclass, field
@@ -149,6 +150,8 @@ class Sistema:
             async with asyncio.timeout(self.cfg.timeout_nota_s):
                 await self.listo.wait()
                 await self.db.guardar_nota(nota, "recibida")
+                if nota.get("fotos"):
+                    self._lanzar(self.bajar_fotos(estado.id, nota["fotos"]))
                 texto = await self.transcribir(estado)
                 t0 = time.perf_counter()
                 condiciones = seguridad.detectar(texto)
@@ -358,7 +361,9 @@ class Sistema:
         contexto = None
         if d.tipo == "Escalado":
             contexto = {"parte": parte, "fotos": fotos or [], "tendencia": await self.tendencia(d.tag, ts, parte_id)}
-            await self.db.encolar(evento_id, "escalado", {"evento": evento.model_dump(mode="json"), "contexto": contexto})
+            fotos_nube = await self.fotos_para_la_nube(parte_id, fotos or [])
+            await self.db.encolar(evento_id, "escalado", {"evento": evento.model_dump(mode="json"),
+                                                          "contexto": contexto | {"fotos": fotos_nube}})
             self.latir_ya.set()
         await self.db.guardar_evento(evento.model_dump(mode="json"), contexto)
         await self.db.registrar_paso(parte_id, "deteccion",
@@ -366,6 +371,40 @@ class Sistema:
                                      argumentos={"evento_id": evento_id, "equipo": d.tag, "filas": parte},
                                      detalle={"tipo": d.tipo, "motivos": d.motivos})
         log.info("Evento %s %s %s: %s", evento_id, d.tipo, d.tag or "", resumen)
+
+    async def bajar_fotos(self, nota_id: str | None, urls: list[str], intentos: int = 3) -> dict[str, str]:
+        """Baja y guarda las fotos que falten. Devuelve el error de las que no se pudieron bajar."""
+        guardadas = await self.db.fotos_guardadas(urls)
+        errores = {}
+        for url in (u for u in dict.fromkeys(urls) if u not in guardadas):
+            t0 = time.perf_counter()
+            for intento in range(1, intentos + 1):
+                try:
+                    r = await self.http.get(url)
+                    r.raise_for_status()
+                    tipo = r.headers.get("content-type", "application/octet-stream")
+                    await self.db.guardar_foto(url, tipo, r.content)
+                    errores.pop(url, None)
+                    detalle = {"bytes": len(r.content), "tipo": tipo, "intentos": intento}
+                    break
+                except Exception as e:  # noqa: BLE001
+                    errores[url] = f"{type(e).__name__}: {e}"
+                    detalle = {"error": errores[url], "intentos": intento}
+                    if intento < intentos:
+                        await asyncio.sleep(1)
+            await self.db.registrar_paso(nota_id, "consulta", herramienta="fotos", argumentos={"url": url},
+                                         duracion_ms=int((time.perf_counter() - t0) * 1000), ok=url not in errores,
+                                         detalle=detalle)
+        return errores
+
+    async def fotos_para_la_nube(self, nota_id: str | None, urls: list[str]) -> list[dict]:
+        if not urls:
+            return []
+        errores = await self.bajar_fotos(nota_id, urls, intentos=1)
+        guardadas = await self.db.fotos_guardadas(urls)
+        return [{"url": u, "tipo": guardadas[u]["tipo"],
+                 "contenido_b64": base64.b64encode(guardadas[u]["contenido"]).decode()} if u in guardadas
+                else {"url": u, "error": errores.get(u, "sin bajar")} for u in urls]
 
     async def tendencia(self, tag: str | None, ts: datetime, nota_id: str | None, horas: int = 6) -> dict:
         if not tag or tag not in self.planta.equipos:
@@ -399,8 +438,9 @@ class Sistema:
         log.warning("ALERTA DE SEGURIDAD %s en nota %s (%s)", codigos, estado.id, tag)
         await self.db.guardar_evento(evento.model_dump(mode="json"), {"evidencia": [c.evidencia for c in condiciones]})
         self.latir_ya.set()
+        fotos_nube = await self.fotos_para_la_nube(estado.id, estado.nota.get("fotos", []))
         await self.db.encolar(evento.id, "alerta_seguridad", {"evento": evento.model_dump(mode="json"),
-                                                               "fotos": estado.nota.get("fotos", [])})
+                                                               "fotos": fotos_nube})
         await self.db.actualizar_nota(estado.id, fase="alerta", seguridad=[vars(c) for c in condiciones])
 
     async def sin_contenido(self, estado: EstadoNota) -> None:

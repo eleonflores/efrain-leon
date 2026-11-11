@@ -71,6 +71,12 @@ CREATE TABLE IF NOT EXISTS salida_nube (
     creado  timestamptz NOT NULL DEFAULT now(),
     enviado timestamptz
 );
+CREATE TABLE IF NOT EXISTS fotos (
+    url       text PRIMARY KEY,
+    tipo      text NOT NULL,
+    contenido bytea NOT NULL,
+    bajada    timestamptz NOT NULL DEFAULT now()
+);
 """
 
 
@@ -125,6 +131,14 @@ class Base:
     async def notas_abiertas(self) -> list[dict]:
         return await self._exec(
             "SELECT * FROM notas WHERE fase NOT IN ('confirmada', 'alerta', 'abandonada', 'sin_contenido') ORDER BY ts")
+
+    async def guardar_foto(self, url: str, tipo: str, contenido: bytes) -> None:
+        await self._exec("INSERT INTO fotos (url, tipo, contenido) VALUES (%s, %s, %s) ON CONFLICT (url) DO NOTHING",
+                         (url, tipo, contenido))
+
+    async def fotos_guardadas(self, urls: list[str]) -> dict[str, dict]:
+        filas = await self._exec("SELECT url, tipo, contenido FROM fotos WHERE url = ANY(%s)", (urls,))
+        return {f["url"]: f for f in filas}
 
     async def guardar_mensaje(self, nota_id: str, mensaje: dict) -> None:
         await self._exec("INSERT INTO mensajes_tablet (id, nota_id, payload) VALUES (%s, %s, %s) "
